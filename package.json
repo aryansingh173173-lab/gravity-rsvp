@@ -1,0 +1,12 @@
+{
+  "name": "gravity-rsvp",
+  "version": "1.0.0",
+  "description": "Gravity RSVP Site Server",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

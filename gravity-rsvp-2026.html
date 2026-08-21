@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gravity Annual Day 2026 — RSVP</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red: #D32030;
+    --red-dark: #a8182a;
+    --red-light: #fdf0f1;
+    --red-mid: #f5c2c6;
+    --gray-50: #fafafa;
+    --gray-100: #f4f4f5;
+    --gray-200: #e4e4e7;
+    --gray-400: #a1a1aa;
+    --gray-600: #52525b;
+    --gray-800: #27272a;
+    --gray-900: #18181b;
+    --white: #ffffff;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.07);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+  }
+
+  html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #f7f1f1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 32px 16px 64px;
+  }
+
+  /* ── Page background pattern ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(211,32,48,0.06) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(211,32,48,0.04) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page-wrap {
+    width: 100%;
+    max-width: 560px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── Logo header ── */
+  .brand-header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .brand-header img.shield { width: 80px; height: 88px; display: block; margin: 0 auto 10px; }
+
+  .brand-name {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    color: var(--gray-800);
+    text-transform: uppercase;
+  }
+
+  .event-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-top: 20px;
+    line-height: 1.25;
+  }
+
+  .event-sub {
+    font-size: 14px;
+    color: var(--gray-600);
+    margin-top: 6px;
+    line-height: 1.6;
+  }
+
+  /* ── Progress ── */
+  .progress-wrap {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px 24px 18px;
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+  }
+
+  .step-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .step-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--gray-400);
+    font-weight: 500;
+    transition: color 0.3s;
+  }
+
+  .step-label.active { color: var(--red); }
+  .step-label.done { color: var(--gray-600); }
+
+  .step-dot {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--gray-400);
+    transition: all 0.3s;
+    flex-shrink: 0;
+    background: var(--white);
+  }
+
+  .step-label.active .step-dot {
+    border-color: var(--red);
+    background: var(--red);
+    color: var(--white);
+  }
+
+  .step-label.done .step-dot {
+    border-color: var(--red);
+    background: var(--red-light);
+    color: var(--red);
+  }
+
+  .progress-bar-track {
+    height: 4px;
+    background: var(--gray-100);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--red);
+    border-radius: 4px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ── Form card ── */
+  .form-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .section-header {
+    background: var(--red);
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-header .icon {
+    width: 34px;
+    height: 34px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .section-header .icon svg { width: 18px; height: 18px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  .section-header h2 {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--white);
+    line-height: 1.2;
+  }
+
+  .section-header p {
+    font-size: 12px;
+    color: rgba(255,255,255,0.75);
+    margin-top: 2px;
+  }
+
+  /* ── Steps container ── */
+  .steps-outer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .step {
+    display: none;
+    padding: 24px 28px 28px;
+    animation: none;
+  }
+
+  .step.active {
+    display: block;
+  }
+
+  .step.slide-in-right {
+    animation: slideInRight 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  .step.slide-in-left {
+    animation: slideInLeft 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(40px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-40px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  /* ── Field groups ── */
+  .field-group {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    padding: 18px 20px;
+    margin-bottom: 14px;
+  }
+
+  .field-group:last-of-type { margin-bottom: 0; }
+
+  .field-label {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--gray-800);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .req { color: var(--red); font-size: 13px; }
+
+  .field-help {
+    font-size: 12px;
+    color: var(--gray-400);
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  textarea {
+    width: 100%;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 10px 13px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--gray-900);
+    background: var(--white);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+  }
+
+  input[type="text"]:focus,
+  input[type="email"]:focus,
+  input[type="tel"]:focus,
+  textarea:focus {
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px rgba(211,32,48,0.1);
+  }
+
+  input.error, textarea.error {
+    border-color: var(--red);
+    background: #fff8f8;
+  }
+
+  textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+
+  .error-msg {
+    font-size: 12px;
+    color: var(--red);
+    margin-top: 5px;
+    display: none;
+  }
+
+  .error-msg.show { display: block; }
+
+  /* ── Radio / Checkbox ── */
+  .radio-group, .check-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .radio-option, .check-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 11px 14px;
+    border-radius: 8px;
+    border: 1.5px solid var(--gray-200);
+    cursor: pointer;
+    background: var(--white);
+    transition: border-color 0.2s, background 0.2s;
+    user-select: none;
+  }
+
+  .radio-option:hover, .check-option:hover {
+    border-color: var(--red-mid);
+    background: var(--red-light);
+  }
+
+  .radio-option.selected, .check-option.selected {
+    border-color: var(--red);
+    background: var(--red-light);
+  }
+
+  .custom-radio {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--gray-200);
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s;
+    background: var(--white);
+  }
+
+  .custom-radio::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--red);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .radio-option.selected .custom-radio {
+    border-color: var(--red);
+  }
+
+  .radio-option.selected .custom-radio::after {
+    opacity: 1;
+  }
+
+  .custom-check {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 2px solid var(--gray-200);
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    background: var(--white);
+  }
+
+  .check-option.selected .custom-check {
+    border-color: var(--red);
+    background: var(--red);
+  }
+
+  .check-option.selected .custom-check::after {
+    content: '';
+    width: 10px;
+    height: 6px;
+    border-left: 2px solid white;
+    border-bottom: 2px solid white;
+    transform: rotate(-45deg) translateY(-1px);
+    display: block;
+  }
+
+  /* ── Confirmation: a switch rather than a tick ──
+     Text leads, the switch sits at the trailing edge. The slide is the
+     only movement, and it happens in response to the user. */
+  #conf-option {
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 16px;
+  }
+
+  #conf-option .option-text { flex: 1; }
+
+  #conf-option:focus-visible {
+    outline: 2px solid var(--red);
+    outline-offset: 2px;
+  }
+
+  #conf-option.selected {
+    border-color: var(--red);
+  }
+
+  .switch {
+    flex-shrink: 0;
+    width: 46px;
+    height: 27px;
+    border-radius: 14px;
+    background: var(--gray-200);
+    position: relative;
+    transition: background 0.22s ease;
+  }
+
+  .switch::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 21px;
+    height: 21px;
+    border-radius: 50%;
+    background: var(--white);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.28);
+    transition: transform 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  #conf-option.selected .switch { background: var(--red); }
+  #conf-option.selected .switch::after { transform: translateX(19px); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .switch, .switch::after { transition: none; }
+  }
+
+  .option-text {
+    font-size: 14px;
+    color: var(--gray-800);
+    line-height: 1.45;
+    padding-top: 0;
+  }
+
+  input[type="radio"], input[type="checkbox"] { display: none; }
+
+  .suggest-chip {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--red);
+    background: var(--red-light);
+    border: 1px solid var(--red-mid);
+    border-radius: 20px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .suggest-chip:hover { background: var(--red-mid); }
+  .suggest-chip::before { content: '↳'; font-size: 14px; }
+
+  /* ── Guest stepper ── */
+  .stepper {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-top: 4px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 8px;
+    width: fit-content;
+    overflow: hidden;
+    background: var(--white);
+  }
+
+  .stepper-btn {
+    width: 46px;
+    height: 46px;
+    border: none;
+    background: var(--white);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+    color: var(--red);
+  }
+
+  .stepper-btn:hover { background: var(--red-light); }
+  .stepper-btn:active { background: var(--red-mid); }
+  .stepper-btn:disabled { color: var(--gray-200); cursor: not-allowed; background: var(--white); }
+
+  .stepper-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+
+  .stepper-value {
+    min-width: 64px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--gray-900);
+    border-left: 1.5px solid var(--gray-200);
+    border-right: 1.5px solid var(--gray-200);
+    line-height: 46px;
+  }
+
+  /* ── Buttons ── */
+  .btn-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 28px 24px;
+    border-top: 1px solid var(--gray-100);
+    gap: 12px;
+  }
+
+  .btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 11px 28px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    outline: none;
+    letter-spacing: 0.01em;
+  }
+
+  .btn-next {
+    background: var(--red);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+
+  .btn-next:hover { background: var(--red-dark); transform: translateY(-1px); }
+  .btn-next:active { transform: translateY(0); }
+
+  .btn-back {
+    background: transparent;
+    color: var(--gray-600);
+    border: 1.5px solid var(--gray-200);
+  }
+
+  .btn-back:hover { border-color: var(--gray-400); color: var(--gray-800); }
+
+  .btn-next svg, .btn-back svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+
+  .btn-submit {
+    background: var(--red);
+    color: var(--white);
+    padding: 13px 36px;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 8px;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn-submit:hover { background: var(--red-dark); transform: translateY(-1px); }
+
+  /* ── Busy state while the RSVP is saving ── */
+  .btn.is-busy { opacity: 0.75; cursor: wait; transform: none; }
+  .btn.is-busy:hover { transform: none; }
+
+  .btn-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.35);
+    border-top-color: var(--white);
+    border-radius: 50%;
+    display: inline-block;
+    animation: btn-spin 0.7s linear infinite;
+  }
+
+  @keyframes btn-spin { to { transform: rotate(360deg); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn-spinner { animation-duration: 2s; }
+  }
+
+  /* ── Confirmation screen ── */
+  .confirm-screen {
+    display: none;
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    padding: 56px 36px 52px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .confirm-screen.show { display: block; }
+
+  .tick-wrap {
+    width: 72px;
+    height: 72px;
+    background: var(--red-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+  }
+
+  .tick-wrap svg {
+    width: 36px;
+    height: 36px;
+    stroke: var(--red);
+    fill: none;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .tick-circle {
+    stroke-dasharray: 157;
+    stroke-dashoffset: 157;
+    animation: drawCircle 0.6s ease forwards 0.1s;
+  }
+
+  .tick-check {
+    stroke-dasharray: 50;
+    stroke-dashoffset: 50;
+    animation: drawCheck 0.4s ease forwards 0.65s;
+  }
+
+  @keyframes drawCircle {
+    to { stroke-dashoffset: 0; }
+  }
+
+  @keyframes drawCheck {
+    to { stroke-dashoffset: 0; }
+  }
+
+  .confirm-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: 10px;
+  }
+
+  .confirm-sub {
+    font-size: 15px;
+    color: var(--gray-600);
+    line-height: 1.65;
+    max-width: 380px;
+    margin: 0 auto 28px;
+  }
+
+  .confirm-detail {
+    background: var(--red-light);
+    border: 1px solid var(--red-mid);
+    border-radius: var(--radius-sm);
+    padding: 16px 20px;
+    text-align: left;
+    margin-bottom: 28px;
+  }
+
+  .confirm-detail p {
+    font-size: 13px;
+    color: var(--gray-600);
+    margin-bottom: 6px;
+    display: flex;
+    gap: 8px;
+  }
+
+  .confirm-detail p:last-child { margin-bottom: 0; }
+
+  .confirm-detail strong {
+    color: var(--gray-900);
+    font-weight: 500;
+    min-width: 100px;
+    display: inline-block;
+  }
+
+  /* ── "your e-pass is coming" note on the confirmation screen ── */
+  .epass-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    text-align: left;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    padding: 16px 18px;
+    margin-bottom: 28px;
+  }
+
+  .epass-note svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    stroke: var(--red);
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .epass-note strong {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: 4px;
+  }
+
+  .epass-note p {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--gray-600);
+  }
+
+  .epass-note #epass-email {
+    color: var(--gray-900);
+    font-weight: 500;
+    word-break: break-word;
+  }
+
+  .confirm-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--gray-100);
+  }
+
+  .confirm-brand span {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: var(--gray-400);
+    text-transform: uppercase;
+  }
+
+  /* ── Confetti ── */
+  .confetti-piece {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 1px;
+    opacity: 0;
+    animation: confettiFall 2s ease forwards;
+  }
+
+  @keyframes confettiFall {
+    0%   { opacity: 1; transform: translateY(-20px) rotate(0deg); }
+    100% { opacity: 0; transform: translateY(320px) rotate(720deg); }
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 540px) {
+    body { padding: 20px 12px 48px; }
+    .section-header { padding: 16px 20px; }
+    .step { padding: 20px 20px 24px; }
+    .btn-row { padding: 16px 20px 20px; }
+    .field-group { padding: 14px 16px; }
+    .event-title { font-size: 22px; }
+    .step-label span { display: none; }
+    .confirm-screen { padding: 40px 24px 40px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .step.slide-in-right, .step.slide-in-left { animation: none; }
+    .tick-circle, .tick-check { animation: none; stroke-dashoffset: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <!-- Brand Header -->
+  <div class="brand-header">
+    <img class="shield" src="/gravity-logo.png" alt="Gravity logo" width="80" height="88">
+    <div class="brand-name">GRAVITY</div>
+    <h1 class="event-title">Annual Day 2026</h1>
+    <p class="event-sub">Gravity Facility Management Solutions<br>An evening of people, partnerships &amp; achievements.</p>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-wrap">
+    <div class="step-labels">
+      <div class="step-label active" id="lbl-1">
+        <div class="step-dot">1</div>
+        <span>Contact</span>
+      </div>
+      <div class="step-label" id="lbl-2">
+        <div class="step-dot">2</div>
+        <span>Guests</span>
+      </div>
+      <div class="step-label" id="lbl-3">
+        <div class="step-dot">3</div>
+        <span>Preferences</span>
+      </div>
+    </div>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progress-fill" style="width:33%"></div>
+    </div>
+  </div>
+
+  <!-- Form Card -->
+  <div class="form-card" id="form-card">
+
+    <!-- ── Step 1 ── -->
+    <div class="step active" id="step-1">
+      <div class="section-header" style="margin: -24px -28px 22px; border-radius: 0;">
+        <div class="icon">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div>
+          <h2>Contact Information</h2>
+          <p>Tell us a little about yourself</p>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Full Name <span class="req">*</span></div>
+        <div class="field-help">As it should appear on your event pass</div>
+        <input type="text" id="fullname" placeholder="e.g. Rahul Sharma">
+        <div class="error-msg" id="err-fullname">Please enter your full name.</div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Email Address <span class="req">*</span></div>
+        <div class="field-help">Your e-pass will be sent to this address</div>
+        <input type="email" id="email" placeholder="e.g. rahul@gmail.com" autocomplete="email" oninput="emailSuggest()">
+        <div id="email-suggest" style="display:none; margin-top:8px;">
+          <button type="button" class="suggest-chip" id="email-suggest-btn" onclick="applySuggest()"></button>
+        </div>
+        <div class="error-msg" id="err-email">Please enter a valid email address.</div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Mobile Number <span class="req">*</span></div>
+        <input type="tel" id="mobile" placeholder="e.g. +91 98765 43210">
+        <div class="error-msg" id="err-mobile">Please enter your mobile number.</div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Will you be joining us for the event? <span class="req">*</span></div>
+        <div class="radio-group" id="rg-attending">
+          <label class="radio-option" onclick="selectRadio('attending','yes',this)">
+            <input type="radio" name="attending" value="yes">
+            <div class="custom-radio"></div>
+            <span class="option-text">Yes, I will be attending</span>
+          </label>
+          <label class="radio-option" onclick="selectRadio('attending','no',this)">
+            <input type="radio" name="attending" value="no">
+            <div class="custom-radio"></div>
+            <span class="option-text">Regretfully, I will not be able to attend</span>
+          </label>
+        </div>
+        <div class="error-msg" id="err-attending">Please select an option.</div>
+      </div>
+
+      <div class="field-group" id="guest-question" style="display:none;">
+        <div class="field-label">Will you be accompanied by a guest? <span class="req">*</span></div>
+        <div class="radio-group" id="rg-guest">
+          <label class="radio-option" onclick="selectRadio('guest','no',this)">
+            <input type="radio" name="guest" value="no">
+            <div class="custom-radio"></div>
+            <span class="option-text">No</span>
+          </label>
+          <label class="radio-option" onclick="selectRadio('guest','yes',this)">
+            <input type="radio" name="guest" value="yes">
+            <div class="custom-radio"></div>
+            <span class="option-text">Yes</span>
+          </label>
+        </div>
+        <div class="error-msg" id="err-guest">Please select an option.</div>
+      </div>
+    </div>
+
+    <!-- ── Step 2 ── -->
+    <div class="step" id="step-2">
+      <div class="section-header" style="margin: -24px -28px 22px; border-radius: 0;">
+        <div class="icon">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div>
+          <h2>Accompanying Guests</h2>
+          <p>Let us know who's joining you</p>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Number of Accompanying Guests <span class="req">*</span></div>
+        <div class="stepper" id="guest-stepper">
+          <button type="button" class="stepper-btn" onclick="changeGuests(-1)" aria-label="Decrease guests">
+            <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <div class="stepper-value" id="guest-value">1</div>
+          <button type="button" class="stepper-btn" onclick="changeGuests(1)" aria-label="Increase guests">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
+        <div class="error-msg" id="err-guestcount">Please select the number of guests.</div>
+      </div>
+    </div>
+
+    <!-- ── Step 3 ── -->
+    <div class="step" id="step-3">
+      <div class="section-header" style="margin: -24px -28px 22px; border-radius: 0;">
+        <div class="icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        </div>
+        <div>
+          <h2>Event Preferences</h2>
+          <p>Help us make your evening perfect</p>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Meal Preference <span class="req">*</span></div>
+        <div class="radio-group" id="rg-meal">
+          <label class="radio-option" onclick="selectRadio('meal','veg',this)">
+            <input type="radio" name="meal" value="veg">
+            <div class="custom-radio"></div>
+            <span class="option-text">Vegetarian</span>
+          </label>
+          <label class="radio-option" onclick="selectRadio('meal','nonveg',this)">
+            <input type="radio" name="meal" value="nonveg">
+            <div class="custom-radio"></div>
+            <span class="option-text">Non-Vegetarian</span>
+          </label>
+        </div>
+        <div class="error-msg" id="err-meal">Please select a meal preference.</div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Special Requirements</div>
+        <div class="field-help">Wheelchair access, dietary restrictions, other arrangements</div>
+        <textarea id="special" placeholder="Let us know if you need anything special..."></textarea>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Confirmation <span class="req">*</span></div>
+        <div class="check-group">
+          <div class="check-option" id="conf-option" onclick="toggleCheck(this)"
+               role="switch" aria-checked="false" tabindex="0"
+               onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();toggleCheck(this);}">
+            <input type="checkbox" id="confirm">
+            <span class="option-text">I confirm my attendance and understand that an e-pass will be issued to the email address provided above.</span>
+            <span class="switch" aria-hidden="true"></span>
+          </div>
+        </div>
+        <div class="error-msg" id="err-confirm">Please confirm your attendance to proceed.</div>
+      </div>
+    </div>
+
+    <!-- Button row -->
+    <div class="btn-row" id="btn-row">
+      <button class="btn btn-back" id="btn-back" onclick="goBack()" style="display:none;">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </button>
+      <button class="btn btn-next" id="btn-next" onclick="goNext()">
+        Next
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Confirmation Screen -->
+  <div class="confirm-screen" id="confirm-screen">
+    <div class="tick-wrap">
+      <svg viewBox="0 0 60 60">
+        <circle class="tick-circle" cx="30" cy="30" r="25" fill="none" stroke="#D32030" stroke-width="2.5"/>
+        <polyline class="tick-check" points="18,30 26,39 42,22" fill="none" stroke="#D32030" stroke-width="2.5"/>
+      </svg>
+    </div>
+    <h2 class="confirm-title">You're on the list!</h2>
+    <p class="confirm-sub">Thank you for your RSVP. We look forward to celebrating with you at Gravity Annual Day 2026.</p>
+    <div class="confirm-detail" id="confirm-detail"></div>
+
+    <div class="epass-note">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/>
+        <polyline points="22,6 12,13 2,6"/>
+      </svg>
+      <div>
+        <strong>Your e-pass is on its way</strong>
+        <p>We're emailing your entry pass to <span id="epass-email">the address above</span> — it usually arrives within a minute. Please download or save the PDF, and bring it on your phone or printed to the entrance desk.</p>
+      </div>
+    </div>
+
+    <div class="confirm-brand">
+      <img src="/gravity-logo.png" alt="" width="24" height="26" style="vertical-align:middle;">
+      <span>Gravity Facility Management Solutions</span>
+    </div>
+  </div>
+
+  <!-- Decline Screen -->
+  <div class="confirm-screen" id="decline-screen">
+    <div class="tick-wrap" style="background:var(--gray-100);">
+      <svg viewBox="0 0 60 60">
+        <circle cx="30" cy="30" r="25" fill="none" stroke="#a1a1aa" stroke-width="2.5"/>
+        <path d="M22 38 Q30 32 38 38" fill="none" stroke="#a1a1aa" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="23" cy="25" r="1.6" fill="#a1a1aa"/>
+        <circle cx="37" cy="25" r="1.6" fill="#a1a1aa"/>
+      </svg>
+    </div>
+    <h2 class="confirm-title">We'll miss you</h2>
+    <p class="confirm-sub">We're sorry to hear you won't be able to join us at Gravity Annual Day 2026. Thank you for letting us know — we hope to celebrate with you next time.</p>
+    <div class="confirm-brand">
+      <img src="/gravity-logo.png" alt="" width="24" height="26" style="vertical-align:middle;">
+      <span>Gravity Facility Management Solutions</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  var currentStep = 1;
+  var radioValues = {};
+
+  function postToSheet(payload) {
+    return fetch('/api/rsvp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(function(res) {
+      return res.json().then(function(data) {
+        if (!res.ok) {
+          throw new Error(data.message || data.error || ('Server returned ' + res.status));
+        }
+        return data;
+      });
+    })
+    .then(function(data) {
+      if (data.result !== 'success') {
+        throw new Error(data.message || 'Google Sheet did not accept the RSVP.');
+      }
+      console.log('Successfully submitted RSVP:', data);
+      return data;
+    })
+    .catch(function(err){
+      console.error('Submit failed:', err);
+      throw err;
+    });
+  }
+
+
+  function emailSuggest() {
+    var input = document.getElementById('email');
+    var box = document.getElementById('email-suggest');
+    var btn = document.getElementById('email-suggest-btn');
+    var val = input.value.trim();
+    var suggestion = '';
+
+    if (val.length > 0) {
+      if (val.indexOf('@') === -1) {
+        suggestion = val + '@gmail.com';
+      } else {
+        var parts = val.split('@');
+        var user = parts[0];
+        var domain = parts[1] || '';
+        if (user && domain.length > 0 && 'gmail.com'.indexOf(domain.toLowerCase()) === 0 && domain.toLowerCase() !== 'gmail.com') {
+          suggestion = user + '@gmail.com';
+        }
+      }
+    }
+
+    if (suggestion && suggestion !== val) {
+      btn.textContent = suggestion;
+      box.style.display = 'block';
+    } else {
+      box.style.display = 'none';
+    }
+  }
+
+  function applySuggest() {
+    var input = document.getElementById('email');
+    input.value = document.getElementById('email-suggest-btn').textContent;
+    document.getElementById('email-suggest').style.display = 'none';
+    input.classList.remove('error');
+    hideErr('err-email');
+  }
+
+  function selectRadio(name, value, el) {
+    radioValues[name] = value;
+    var group = el.closest('.radio-group');
+    group.querySelectorAll('.radio-option').forEach(function(o){ o.classList.remove('selected'); });
+    el.classList.add('selected');
+    el.querySelector('input[type="radio"]').checked = true;
+    hideErr('err-' + name);
+
+    if (name === 'attending') {
+      var gq = document.getElementById('guest-question');
+      if (value === 'yes') {
+        gq.style.display = 'block';
+        gq.style.animation = 'slideInRight 0.3s ease';
+      } else {
+        gq.style.display = 'none';
+        radioValues['guest'] = null;
+      }
+    }
+  }
+
+  function toggleCheck(el) {
+    el.classList.toggle('selected');
+    var cb = el.querySelector('input[type="checkbox"]');
+    cb.checked = !cb.checked;
+    if (el.hasAttribute('aria-checked')) el.setAttribute('aria-checked', String(cb.checked));
+    if (cb.checked) hideErr('err-confirm');
+  }
+
+  function hideErr(id) {
+    var e = document.getElementById(id);
+    if (e) e.classList.remove('show');
+  }
+
+  function showErr(id) {
+    var e = document.getElementById(id);
+    if (e) e.classList.add('show');
+  }
+
+  function validateStep1() {
+    var ok = true;
+    var name = document.getElementById('fullname').value.trim();
+    var email = document.getElementById('email').value.trim();
+    var mobile = document.getElementById('mobile').value.trim();
+    var specialRequirements = document.getElementById('special').value.trim();
+
+    if (!name) { showErr('err-fullname'); document.getElementById('fullname').classList.add('error'); ok = false; }
+    else { hideErr('err-fullname'); document.getElementById('fullname').classList.remove('error'); }
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showErr('err-email'); document.getElementById('email').classList.add('error'); ok = false;
+    } else { hideErr('err-email'); document.getElementById('email').classList.remove('error'); }
+
+    if (!mobile) { showErr('err-mobile'); document.getElementById('mobile').classList.add('error'); ok = false; }
+    else { hideErr('err-mobile'); document.getElementById('mobile').classList.remove('error'); }
+
+    if (!radioValues['attending']) { showErr('err-attending'); ok = false; }
+
+    if (radioValues['attending'] === 'yes' && !radioValues['guest']) {
+      showErr('err-guest'); ok = false;
+    }
+
+    return ok;
+  }
+
+  var guestCount = 1;
+
+  function changeGuests(delta) {
+    guestCount = Math.max(1, guestCount + delta);
+    document.getElementById('guest-value').textContent = guestCount;
+    radioValues['guestcount'] = String(guestCount);
+    document.querySelector('#guest-stepper .stepper-btn:first-child').disabled = (guestCount <= 1);
+    document.querySelector('#guest-stepper .stepper-btn:last-child').disabled = false;
+  }
+
+  function validateStep2() {
+    radioValues['guestcount'] = String(guestCount);
+    return true;
+  }
+
+  function validateStep3() {
+    var ok = true;
+    if (!radioValues['meal']) { showErr('err-meal'); ok = false; }
+    var cb = document.getElementById('confirm');
+    if (!cb.checked) { showErr('err-confirm'); ok = false; }
+    return ok;
+  }
+
+  function getNextStep() {
+    if (currentStep === 1) {
+      if (radioValues['guest'] === 'no') return 3;
+      return 2;
+    }
+    if (currentStep === 2) return 3;
+    return null;
+  }
+
+  function updateProgress(step) {
+    var pct = step === 1 ? 33 : step === 2 ? 66 : 100;
+    document.getElementById('progress-fill').style.width = pct + '%';
+    [1,2,3].forEach(function(i) {
+      var lbl = document.getElementById('lbl-' + i);
+      lbl.classList.remove('active','done');
+      if (i === step) lbl.classList.add('active');
+      else if (i < step) lbl.classList.add('done');
+    });
+    var dot2 = document.getElementById('lbl-2').querySelector('.step-dot');
+    if (step > 2 || (step === 2)) {
+      // update check mark for done steps
+    }
+  }
+
+  function showStep(next, dir) {
+    var cur = document.getElementById('step-' + currentStep);
+    cur.classList.remove('active','slide-in-right','slide-in-left');
+    cur.style.display = 'none';
+
+    currentStep = next;
+    var el = document.getElementById('step-' + currentStep);
+    el.style.display = 'block';
+    el.classList.add('active', dir === 'forward' ? 'slide-in-right' : 'slide-in-left');
+
+    updateProgress(currentStep);
+
+    var backBtn = document.getElementById('btn-back');
+    var nextBtn = document.getElementById('btn-next');
+
+    backBtn.style.display = currentStep > 1 ? 'flex' : 'none';
+    nextBtn.innerHTML = currentStep === 3
+      ? '<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"/></svg> Submit RSVP'
+      : 'Next <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="9 18 15 12 9 6"/></svg>';
+  }
+
+  function goNext() {
+    if (currentStep === 1) {
+      if (!validateStep1()) return;
+      if (radioValues['attending'] === 'no') {
+        declineForm();
+        return;
+      }
+      var next = getNextStep();
+      if (next === 3) {
+        updateProgress(2);
+        setTimeout(function(){ showStep(3,'forward'); }, 10);
+      } else {
+        showStep(next, 'forward');
+      }
+    } else if (currentStep === 2) {
+      if (!validateStep2()) return;
+      showStep(3, 'forward');
+    } else if (currentStep === 3) {
+      if (!validateStep3()) return;
+      submitForm();
+    }
+  }
+
+  function goBack() {
+    if (currentStep === 2) { showStep(1, 'back'); }
+    else if (currentStep === 3) {
+      if (radioValues['attending'] === 'no' || radioValues['guest'] === 'no') {
+        showStep(1, 'back');
+      } else {
+        showStep(2, 'back');
+      }
+    }
+  }
+
+  async function submitForm() {
+    var name = document.getElementById('fullname').value.trim();
+    var email = document.getElementById('email').value.trim();
+    var mobile = document.getElementById('mobile').value.trim();
+    var specialEl = document.getElementById('special');
+    var specialRequirements = specialEl ? specialEl.value.trim() : '';
+    var meal = ({veg:'Vegetarian',nonveg:'Non-Vegetarian'})[radioValues['meal']] || '';
+    var withGuest = radioValues['guest'] === 'yes';
+    var guests = withGuest ? (radioValues['guestcount'] || '1') : '0';
+
+    var submitBtn = document.getElementById('btn-next');
+    var submitLabel = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.classList.add('is-busy');
+    submitBtn.innerHTML = '<span class="btn-spinner"></span> Submitting…';
+
+    try {
+      await postToSheet({
+        fullName: name,
+        email: email,
+        mobile: mobile,
+        attending: 'Attending',
+        guestCount: guests,
+        meal: meal,
+        specialRequirements: specialRequirements
+      });
+    } catch (err) {
+      alert('We could not save your RSVP. Please try again.\n\n' + err.message);
+      return;
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.classList.remove('is-busy');
+      submitBtn.innerHTML = submitLabel;
+    }
+
+    var html = '';
+    html += '<p><strong>Name</strong>' + name + '</p>';
+    html += '<p><strong>Email</strong>' + email + '</p>';
+    html += '<p><strong>Meal</strong>' + meal + '</p>';
+    if (withGuest) {
+      html += '<p><strong>Guests</strong>' + guests + ' guest(s)</p>';
+    }
+
+    document.getElementById('confirm-detail').innerHTML = html;
+
+    var epassEmail = document.getElementById('epass-email');
+    if (epassEmail && email) epassEmail.textContent = email;
+    document.getElementById('form-card').style.display = 'none';
+    document.querySelector('.progress-wrap').style.display = 'none';
+
+    var cs = document.getElementById('confirm-screen');
+    cs.classList.add('show');
+    launchConfetti(cs);
+  }
+
+  async function declineForm() {
+    var name = document.getElementById('fullname').value.trim();
+    var email = document.getElementById('email').value.trim();
+    var mobile = document.getElementById('mobile').value.trim();
+    var specialEl = document.getElementById('special');
+    var specialRequirements = specialEl ? specialEl.value.trim() : '';
+
+    try {
+      await postToSheet({
+        fullName: name,
+        email: email,
+        mobile: mobile,
+        attending: 'Not Attending',
+        guestCount: '0',
+        meal: '',
+        specialRequirements: specialRequirements
+      });
+    } catch (err) {
+      alert('We could not save your RSVP. Please try again.\n\n' + err.message);
+      return;
+    }
+
+    document.getElementById('form-card').style.display = 'none';
+    document.querySelector('.progress-wrap').style.display = 'none';
+    document.getElementById('decline-screen').classList.add('show');
+  }
+
+  function launchConfetti(parent) {
+    var colors = ['#D32030','#f5c2c6','#ffd166','#06d6a0','#118ab2','#d32030'];
+    for (var i = 0; i < 28; i++) {
+      (function(i){
+        setTimeout(function(){
+          var piece = document.createElement('div');
+          piece.className = 'confetti-piece';
+          piece.style.left = (Math.random() * 100) + '%';
+          piece.style.top = '0';
+          piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+          piece.style.width = (6 + Math.random() * 6) + 'px';
+          piece.style.height = (6 + Math.random() * 6) + 'px';
+          piece.style.animationDuration = (1.5 + Math.random()) + 's';
+          piece.style.animationDelay = '0s';
+          parent.appendChild(piece);
+          setTimeout(function(){ piece.remove(); }, 2600);
+        }, i * 60);
+      })(i);
+    }
+  }
+
+  updateProgress(1);
+  changeGuests(0);
+</script>
+</body>
+</html>

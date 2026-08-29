@@ -357,14 +357,17 @@ function buildTicketPdf(fullName, guestText, meal, uniqueID) {
   return pdf;
 }
 
-/** Places one line of guest data. Slides text boxes pad their contents, so back that out. */
+/** Places one non-empty line of guest data. Slides text boxes pad their contents, so back that out. */
 function addTicketField(slide, text, pos, sizePt, color, pageW) {
+  var value = String(text == null ? '' : text).trim();
+  if (!value) return null;
+
   var INSET_X_PT = 7.2;   // Slides' own text-box padding, in points
   var INSET_Y_PT = 3.6;
 
   var left = pos.x - INSET_X_PT;
   var box = slide.insertTextBox(
-    String(text),
+    value,
     left,
     pos.y - INSET_Y_PT,
     Math.min(220, pageW - left),

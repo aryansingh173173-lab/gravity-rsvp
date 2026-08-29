@@ -169,8 +169,8 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Handle static file serving
-  let filePath = safeUrl === '/' ? '/gravity-rsvp-2026.html' : safeUrl;
+  let defaultPage = fs.existsSync(path.join(__dirname, 'gravity-rsvp-2026.html')) ? '/gravity-rsvp-2026.html' : '/index.html';
+  let filePath = safeUrl === '/' ? defaultPage : safeUrl;
   filePath = path.join(__dirname, filePath);
 
   // Simple security check: ensure path is within the workspace directory

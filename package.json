@@ -4,7 +4,7 @@
   "description": "Gravity RSVP Site Server",
   "main": "server.js",
   "scripts": {
-    "dev": "node server.js"
+    "dev": "node --use-system-ca server.js"
   },
   "keywords": [],
   "author": "",

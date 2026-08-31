@@ -911,14 +911,14 @@
       </div>
 
       <div class="field-group">
-        <div class="field-label">Full Name <span class="req">*</span></div>
+        <label class="field-label" for="fullname">Full Name <span class="req">*</span></label>
         <div class="field-help">As it should appear on your event pass</div>
         <input type="text" id="fullname" placeholder="e.g. Rahul Sharma">
         <div class="error-msg" id="err-fullname">Please enter your full name.</div>
       </div>
 
       <div class="field-group">
-        <div class="field-label">Email Address <span class="req">*</span></div>
+        <label class="field-label" for="email">Email Address <span class="req">*</span></label>
         <div class="field-help">Your e-pass will be sent to this address</div>
         <input type="email" id="email" placeholder="e.g. rahul@gmail.com" autocomplete="email" oninput="emailSuggest()">
         <div id="email-suggest" style="display:none; margin-top:8px;">
@@ -927,12 +927,32 @@
         <div class="error-msg" id="err-email">Please enter a valid email address.</div>
       </div>
 
+    </div>
+
+    <!-- ── Step 2 ── -->
+    <div class="step" id="step-2">
+      <div class="section-header">
+        <div>
+          <h2>Mobile Number</h2>
+          <p>How can we reach you?</p>
+        </div>
+      </div>
       <div class="field-group">
-        <div class="field-label">Mobile Number <span class="req">*</span></div>
+        <label class="field-label" for="mobile">Mobile Number <span class="req">*</span></label>
         <input type="tel" id="mobile" placeholder="e.g. +91 98765 43210">
         <div class="error-msg" id="err-mobile">Please enter your mobile number.</div>
       </div>
 
+    </div>
+
+    <!-- ── Step 3 ── -->
+    <div class="step" id="step-3">
+      <div class="section-header">
+        <div>
+          <h2>Accompanying Guests</h2>
+          <p>Let us know if someone is joining you</p>
+        </div>
+      </div>
       <div class="field-group" id="guest-question">
         <div class="field-label">Will you be accompanied by a guest? <span class="req">*</span></div>
         <div class="radio-group" id="rg-guest">
@@ -951,8 +971,8 @@
       </div>
     </div>
 
-    <!-- ── Step 2 ── -->
-    <div class="step" id="step-2">
+    <!-- ── Step 4 ── -->
+    <div class="step" id="step-4">
       <div class="section-header">
         <div class="icon">
           <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -978,8 +998,8 @@
       </div>
     </div>
 
-    <!-- ── Step 3 ── -->
-    <div class="step" id="step-3">
+    <!-- ── Step 5 ── -->
+    <div class="step" id="step-5">
       <div class="section-header">
         <div class="icon">
           <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
@@ -991,11 +1011,21 @@
       </div>
 
       <div class="field-group">
-        <div class="field-label">Special Requirements</div>
+        <label class="field-label" for="special">Special Requirements</label>
         <div class="field-help">Wheelchair access, dietary restrictions, other arrangements</div>
         <textarea id="special" placeholder="Let us know if you need anything special..."></textarea>
       </div>
 
+    </div>
+
+    <!-- ── Step 6 ── -->
+    <div class="step" id="step-6">
+      <div class="section-header">
+        <div>
+          <h2>Confirm Your Attendance</h2>
+          <p>One last step to complete your RSVP</p>
+        </div>
+      </div>
       <div class="field-group">
         <div class="field-label">Confirmation <span class="req">*</span></div>
         <div class="check-group">
@@ -1018,7 +1048,7 @@
         Back
       </button>
       <button class="btn btn-next" id="btn-next" onclick="goNext()">
-        Next
+        Submit
         <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
     </div>
@@ -1174,8 +1204,6 @@
     var ok = true;
     var name = document.getElementById('fullname').value.trim();
     var email = document.getElementById('email').value.trim();
-    var mobile = document.getElementById('mobile').value.trim();
-    var specialRequirements = document.getElementById('special').value.trim();
 
     if (!name) { showErr('err-fullname'); document.getElementById('fullname').classList.add('error'); ok = false; }
     else { hideErr('err-fullname'); document.getElementById('fullname').classList.remove('error'); }
@@ -1184,9 +1212,20 @@
       showErr('err-email'); document.getElementById('email').classList.add('error'); ok = false;
     } else { hideErr('err-email'); document.getElementById('email').classList.remove('error'); }
 
+    return ok;
+  }
+
+  function validateStep2() {
+    var ok = true;
+    var mobile = document.getElementById('mobile').value.trim();
     if (!mobile) { showErr('err-mobile'); document.getElementById('mobile').classList.add('error'); ok = false; }
     else { hideErr('err-mobile'); document.getElementById('mobile').classList.remove('error'); }
 
+    return ok;
+  }
+
+  function validateStep3() {
+    var ok = true;
     if (!radioValues['guest']) {
       showErr('err-guest'); ok = false;
     }
@@ -1204,12 +1243,12 @@
     document.querySelector('#guest-stepper .stepper-btn:last-child').disabled = false;
   }
 
-  function validateStep2() {
+  function validateStep4() {
     radioValues['guestcount'] = String(guestCount);
     return true;
   }
 
-  function validateStep3() {
+  function validateStep6() {
     var ok = true;
     var cb = document.getElementById('confirm');
     if (!cb.checked) { showErr('err-confirm'); ok = false; }
@@ -1217,27 +1256,21 @@
   }
 
   function getNextStep() {
-    if (currentStep === 1) {
-      if (radioValues['guest'] === 'no') return 3;
-      return 2;
-    }
-    if (currentStep === 2) return 3;
-    return null;
+    if (currentStep === 3 && radioValues['guest'] === 'no') return 5;
+    return currentStep < 6 ? currentStep + 1 : null;
   }
 
   function updateProgress(step) {
-    var pct = step === 1 ? 33 : step === 2 ? 66 : 100;
+    var steps = radioValues['guest'] === 'no' ? [1,2,3,5,6] : [1,2,3,4,5,6];
+    var pct = ((steps.indexOf(step) + 1) / steps.length) * 100;
+    var section = step <= 2 ? 1 : step <= 4 ? 2 : 3;
     document.getElementById('progress-fill').style.width = pct + '%';
     [1,2,3].forEach(function(i) {
       var lbl = document.getElementById('lbl-' + i);
       lbl.classList.remove('active','done');
-      if (i === step) lbl.classList.add('active');
-      else if (i < step) lbl.classList.add('done');
+      if (i === section) lbl.classList.add('active');
+      else if (i < section) lbl.classList.add('done');
     });
-    var dot2 = document.getElementById('lbl-2').querySelector('.step-dot');
-    if (step > 2 || (step === 2)) {
-      // update check mark for done steps
-    }
   }
 
   function showStep(next, dir) {
@@ -1264,39 +1297,24 @@
     var nextBtn = document.getElementById('btn-next');
 
     backBtn.style.display = currentStep > 1 ? 'flex' : 'none';
-    nextBtn.innerHTML = currentStep === 3
+    nextBtn.innerHTML = currentStep === 6
       ? '<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"/></svg> Submit RSVP'
-      : 'Next <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="9 18 15 12 9 6"/></svg>';
+      : 'Submit <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="9 18 15 12 9 6"/></svg>';
   }
 
   function goNext() {
-    if (currentStep === 1) {
-      if (!validateStep1()) return;
-      var next = getNextStep();
-      if (next === 3) {
-        updateProgress(2);
-        setTimeout(function(){ showStep(3,'forward'); }, 10);
-      } else {
-        showStep(next, 'forward');
-      }
-    } else if (currentStep === 2) {
-      if (!validateStep2()) return;
-      showStep(3, 'forward');
-    } else if (currentStep === 3) {
-      if (!validateStep3()) return;
-      submitForm();
-    }
+    if (document.getElementById('btn-next').disabled) return;
+    var validators = { 1: validateStep1, 2: validateStep2, 3: validateStep3, 4: validateStep4, 6: validateStep6 };
+    if (validators[currentStep] && !validators[currentStep]()) return;
+    var next = getNextStep();
+    if (next) showStep(next, 'forward');
+    else submitForm();
   }
 
   function goBack() {
-    if (currentStep === 2) { showStep(1, 'back'); }
-    else if (currentStep === 3) {
-      if (radioValues['guest'] === 'no') {
-        showStep(1, 'back');
-      } else {
-        showStep(2, 'back');
-      }
-    }
+    if (document.getElementById('btn-next').disabled || currentStep === 1) return;
+    var previous = currentStep === 5 && radioValues['guest'] === 'no' ? 3 : currentStep - 1;
+    showStep(previous, 'back');
   }
 
   async function submitForm() {

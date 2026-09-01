@@ -998,49 +998,6 @@
       </div>
     </div>
 
-    <!-- ── Step 5 ── -->
-    <div class="step" id="step-5">
-      <div class="section-header">
-        <div class="icon">
-          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-        </div>
-        <div>
-          <h2>Additional Details</h2>
-          <p>Share anything else we should know</p>
-        </div>
-      </div>
-
-      <div class="field-group">
-        <label class="field-label" for="special">Special Requirements</label>
-        <div class="field-help">Wheelchair access, dietary restrictions, other arrangements</div>
-        <textarea id="special" placeholder="Let us know if you need anything special..."></textarea>
-      </div>
-
-    </div>
-
-    <!-- ── Step 6 ── -->
-    <div class="step" id="step-6">
-      <div class="section-header">
-        <div>
-          <h2>Confirm Your Attendance</h2>
-          <p>One last step to complete your RSVP</p>
-        </div>
-      </div>
-      <div class="field-group">
-        <div class="field-label">Confirmation <span class="req">*</span></div>
-        <div class="check-group">
-          <div class="check-option" id="conf-option" onclick="toggleCheck(this)"
-               role="switch" aria-checked="false" tabindex="0"
-               onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();toggleCheck(this);}">
-            <input type="checkbox" id="confirm">
-            <span class="option-text">I confirm my attendance and understand that an e-pass will be issued to the email address provided above.</span>
-            <span class="switch" aria-hidden="true"></span>
-          </div>
-        </div>
-        <div class="error-msg" id="err-confirm">Please confirm your attendance to proceed.</div>
-      </div>
-    </div>
-
     <!-- Button row -->
     <div class="btn-row" id="btn-row">
       <button class="btn btn-back" id="btn-back" onclick="goBack()" style="display:none;">
@@ -1179,15 +1136,10 @@
     el.classList.add('selected');
     el.querySelector('input[type="radio"]').checked = true;
     hideErr('err-' + name);
-
-  }
-
-  function toggleCheck(el) {
-    el.classList.toggle('selected');
-    var cb = el.querySelector('input[type="checkbox"]');
-    cb.checked = !cb.checked;
-    if (el.hasAttribute('aria-checked')) el.setAttribute('aria-checked', String(cb.checked));
-    if (cb.checked) hideErr('err-confirm');
+    if (name === 'guest' && currentStep === 3) {
+      updateProgress(currentStep);
+      updateNavigation();
+    }
   }
 
   function hideErr(id) {
@@ -1248,20 +1200,13 @@
     return true;
   }
 
-  function validateStep6() {
-    var ok = true;
-    var cb = document.getElementById('confirm');
-    if (!cb.checked) { showErr('err-confirm'); ok = false; }
-    return ok;
-  }
-
   function getNextStep() {
-    if (currentStep === 3 && radioValues['guest'] === 'no') return 5;
-    return currentStep < 6 ? currentStep + 1 : null;
+    if (currentStep === 3 && radioValues['guest'] === 'no') return null;
+    return currentStep < 4 ? currentStep + 1 : null;
   }
 
   function updateProgress(step) {
-    var steps = radioValues['guest'] === 'no' ? [1,2,3,5,6] : [1,2,3,4,5,6];
+    var steps = radioValues['guest'] === 'no' ? [1,2,3] : [1,2,3,4];
     var pct = ((steps.indexOf(step) + 1) / steps.length) * 100;
     var section = step <= 2 ? 1 : step <= 4 ? 2 : 3;
     document.getElementById('progress-fill').style.width = pct + '%';
@@ -1293,18 +1238,22 @@
       });
     }
 
+    updateNavigation();
+  }
+
+  function updateNavigation() {
     var backBtn = document.getElementById('btn-back');
     var nextBtn = document.getElementById('btn-next');
-
     backBtn.style.display = currentStep > 1 ? 'flex' : 'none';
-    nextBtn.innerHTML = currentStep === 6
+    var isFinalStep = currentStep === 4 || (currentStep === 3 && radioValues['guest'] === 'no');
+    nextBtn.innerHTML = isFinalStep
       ? '<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"/></svg> Submit RSVP'
       : 'Submit <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="9 18 15 12 9 6"/></svg>';
   }
 
   function goNext() {
     if (document.getElementById('btn-next').disabled) return;
-    var validators = { 1: validateStep1, 2: validateStep2, 3: validateStep3, 4: validateStep4, 6: validateStep6 };
+    var validators = { 1: validateStep1, 2: validateStep2, 3: validateStep3, 4: validateStep4 };
     if (validators[currentStep] && !validators[currentStep]()) return;
     var next = getNextStep();
     if (next) showStep(next, 'forward');
@@ -1313,8 +1262,7 @@
 
   function goBack() {
     if (document.getElementById('btn-next').disabled || currentStep === 1) return;
-    var previous = currentStep === 5 && radioValues['guest'] === 'no' ? 3 : currentStep - 1;
-    showStep(previous, 'back');
+    showStep(currentStep - 1, 'back');
   }
 
   async function submitForm() {

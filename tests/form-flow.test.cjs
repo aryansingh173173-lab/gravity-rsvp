@@ -36,12 +36,12 @@ function setup() {
   return { context, element, payload: () => submitted };
 }
 
-test('fields are separated into six distinct steps with unique IDs', () => {
+test('fields are separated into four distinct steps with unique IDs', () => {
   const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
   assert.equal(ids.length, new Set(ids).size);
-  const expected = [['fullname', 'email'], ['mobile'], ['guest-question'], ['guest-value'], ['special'], ['confirm']];
+  const expected = [['fullname', 'email'], ['mobile'], ['guest-question'], ['guest-value']];
   const steps = html.split(/<div class="step(?: active)?" id="step-\d">/).slice(1);
-  assert.equal(steps.length, 6);
+  assert.equal(steps.length, 4);
   expected.forEach((fields, index) => {
     fields.forEach(id => assert.ok(steps[index].includes(`id="${id}"`)));
     expected.flat().filter(id => !fields.includes(id)).forEach(id => {
@@ -72,24 +72,16 @@ for (const guest of ['yes', 'no']) {
     c.goNext();
     assert.equal(c.currentStep, 3);
     c.radioValues.guest = guest;
-    c.goNext();
+    c.updateProgress(c.currentStep);
+    c.updateNavigation();
     if (guest === 'yes') {
+      c.goNext();
       assert.equal(c.currentStep, 4);
       c.changeGuests(2);
-      c.goNext();
     }
-    assert.equal(c.currentStep, 5);
-    c.goBack();
     assert.equal(c.currentStep, guest === 'yes' ? 4 : 3);
-    c.goNext();
-    assert.equal(c.currentStep, 5);
-    c.goNext(); // Optional special requirements can be left blank.
-    assert.equal(c.currentStep, 6);
-    assert.equal(el('progress-fill').style.width, '100%');
     assert.match(el('btn-next').innerHTML, /Submit RSVP/);
-    c.goNext();
-    assert.equal(payload(), undefined);
-    el('confirm').checked = true;
+    assert.equal(el('progress-fill').style.width, '100%');
     c.goNext();
     await new Promise(resolve => setImmediate(resolve));
     assert.equal(payload().fullName, 'Test Attendee');
@@ -108,9 +100,10 @@ test('changing guest answer skips count without losing contact details', () => {
   c.radioValues.guest = 'yes';
   c.goNext(); c.changeGuests(1); c.goBack();
   c.radioValues.guest = 'no';
-  c.goNext();
-  assert.equal(c.currentStep, 5);
-  c.goBack(); c.goBack(); c.goBack();
+  c.updateProgress(c.currentStep);
+  c.updateNavigation();
+  assert.equal(c.currentStep, 3);
+  c.goBack(); c.goBack();
   assert.equal(c.currentStep, 1);
   assert.equal(el('fullname').value, 'Test Attendee');
   assert.equal(el('mobile').value, '1234567890');

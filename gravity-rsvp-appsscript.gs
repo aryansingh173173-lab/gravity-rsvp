@@ -26,6 +26,9 @@
 
 var SHEET_NAME = 'RSVPs';
 var SPREADSHEET_ID = '18tuY1IeFRz2XenryFE3kfXTiZxUbNa7Cs_4kExr9JU0';
+// The pass artwork is versioned with the site so future ticket generations use
+// the exact approved design. Keep the Drive ID as a fallback while deploying.
+var TEMPLATE_IMAGE_URL = 'https://raw.githubusercontent.com/aryansingh173173-lab/gravity-rsvp/main/gravity-annual-day-pass-template.png';
 var TEMPLATE_IMAGE_ID = '12CI_jNF7hBoHpv-BTBqcQqLSELuloAE4';
 
 // A blank Slides file whose page setup is 5.33 x 8 in (the artwork's 2:3 shape).
@@ -41,11 +44,10 @@ var MAX_RUN_MS = 4.5 * 60 * 1000;   // leave headroom under the 6-minute cap
 var BUILD_ATTEMPTS = 3;   // in-process retries around a single PDF build
 var MAX_ATTEMPTS = 5;     // how many separate runs a row gets before giving up
 
-// The ticket artwork is 2:3. Field positions below are in the same 512x768
-// coordinate space used to lay out the preview.
-var TICKET_W_PX = 512;
-var TICKET_H_PX = 768;
-var PX_TO_PT = 0.75;
+// The approved artwork is 1024 x 1535 (approximately 2:3). Overlay positions below use this
+// same coordinate space, then scale automatically to the Slides page.
+var TICKET_W_PX = 1024;
+var TICKET_H_PX = 1535;
 
 /** Helper to get Spreadsheet by ID or active context */
 function getSpreadsheet() {
@@ -293,7 +295,7 @@ function processPendingTickets() {
  * The layout is derived from the copy's real page size rather than assumed,
  * so the artwork always fills the page it is actually drawn on.
  */
-function buildTicketPdf(fullName, guestText, meal, uniqueID) {
+function buildTicketPdf(fullName, attendeeCount, uniqueID) {
   if (!SLIDE_TEMPLATE_ID || SLIDE_TEMPLATE_ID.indexOf('PASTE_') === 0) {
     throw new Error('SLIDE_TEMPLATE_ID is not configured.');
   }
@@ -327,23 +329,12 @@ function buildTicketPdf(fullName, guestText, meal, uniqueID) {
       return { x: offX + xPx * scale, y: offY + yPx * scale };
     };
 
-    slide.insertImage(
-      DriveApp.getFileById(TEMPLATE_IMAGE_ID).getBlob(),
-      offX, offY, drawW, drawH
-    );
+    slide.insertImage(getTicketArtworkBlob(), offX, offY, drawW, drawH);
 
-    var qrAt = at(178, 460);
-    slide.insertImage(
-      UrlFetchApp.fetch(
-        'https://quickchart.io/qr?text=' + encodeURIComponent(uniqueID) + '&size=400&margin=1'
-      ).getBlob(),
-      qrAt.x, qrAt.y, 156 * scale, 156 * scale
-    );
-
-    addTicketField(slide, fullName,             at(173, 284), 15 * scale, '#2b2320', pageW);
-    addTicketField(slide, 'You + ' + guestText, at(173, 354), 15 * scale, '#2b2320', pageW);
-    addTicketField(slide, meal,                 at(173, 421), 15 * scale, '#2b2320', pageW);
-    addTicketField(slide, uniqueID,             at(234, 618), 13 * scale, '#b01020', pageW);
+    // Fill the three dotted lines in the supplied artwork.
+    addTicketField(slide, fullName,      at(330, 650), 26 * scale, '#171717', pageW, 560 * scale);
+    addTicketField(slide, attendeeCount, at(330, 836), 26 * scale, '#171717', pageW, 560 * scale);
+    addTicketField(slide, uniqueID,      at(466, 1028), 23 * scale, '#9f1118', pageW, 300 * scale);
 
     presentation.saveAndClose();
 
@@ -357,8 +348,23 @@ function buildTicketPdf(fullName, guestText, meal, uniqueID) {
   return pdf;
 }
 
+/** Downloads the approved artwork, with the previous Drive image as a safe fallback. */
+function getTicketArtworkBlob() {
+  try {
+    var response = UrlFetchApp.fetch(TEMPLATE_IMAGE_URL, {
+      muteHttpExceptions: true,
+      followRedirects: true
+    });
+    if (response.getResponseCode() === 200) return response.getBlob();
+    throw new Error('Artwork download returned HTTP ' + response.getResponseCode());
+  } catch (err) {
+    Logger.log('Using Drive artwork fallback: ' + err.message);
+    return DriveApp.getFileById(TEMPLATE_IMAGE_ID).getBlob();
+  }
+}
+
 /** Places one non-empty line of guest data. Slides text boxes pad their contents, so back that out. */
-function addTicketField(slide, text, pos, sizePt, color, pageW) {
+function addTicketField(slide, text, pos, sizePt, color, pageW, requestedWidth) {
   var value = String(text == null ? '' : text).trim();
   if (!value) return null;
 
@@ -370,7 +376,7 @@ function addTicketField(slide, text, pos, sizePt, color, pageW) {
     value,
     left,
     pos.y - INSET_Y_PT,
-    Math.min(220, pageW - left),
+    Math.min(requestedWidth || 220, pageW - left),
     24
   );
   box.getText().getTextStyle()
@@ -383,13 +389,11 @@ function addTicketField(slide, text, pos, sizePt, color, pageW) {
 
 /** Emails one guest their PDF e-pass, retrying transient build failures. */
 function sendTicketEmail(fullName, email, guestCount, uniqueID, meal) {
-  var count = String(guestCount || '0');
-  var guestText = (count && count !== '0')
-    ? (count + ' guest' + (count === '1' ? '' : 's'))
-    : 'No additional guests';
+  var additionalGuests = Math.max(0, parseInt(guestCount, 10) || 0);
+  var attendeeCount = String(1 + additionalGuests);
 
   var pdfAttachment = withRetry('buildTicketPdf ' + uniqueID, function () {
-    return buildTicketPdf(fullName, guestText, meal, uniqueID);
+    return buildTicketPdf(fullName, attendeeCount, uniqueID);
   });
 
   MailApp.sendEmail({
@@ -448,7 +452,7 @@ function ticketStatusReport() {
 
 /** Run this manually to grant permissions and preview a sample pass in your Drive. */
 function testTicketPdf() {
-  var pdf = buildTicketPdf('Aryan Singh', '3 guests', 'Vegetarian', 'GRV-2026-TEST');
+  var pdf = buildTicketPdf('Aryan Singh', '3', 'GRV-2026-TEST');
   var file = DriveApp.createFile(pdf);
   Logger.log('Sample pass created: ' + file.getUrl());
 }

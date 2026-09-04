@@ -28,7 +28,7 @@ var SHEET_NAME = 'RSVPs';
 var SPREADSHEET_ID = '18tuY1IeFRz2XenryFE3kfXTiZxUbNa7Cs_4kExr9JU0';
 // The pass artwork is versioned with the site so future ticket generations use
 // the exact approved design. Keep the Drive ID as a fallback while deploying.
-var TEMPLATE_IMAGE_URL = 'https://raw.githubusercontent.com/aryansingh173173-lab/gravity-rsvp/main/gravity-annual-day-pass-template-v2.png';
+var TEMPLATE_IMAGE_URL = 'https://raw.githubusercontent.com/aryansingh173173-lab/gravity-rsvp/main/gravity-invitations.png';
 var TEMPLATE_IMAGE_ID = '12CI_jNF7hBoHpv-BTBqcQqLSELuloAE4';
 
 // A blank Slides file whose page setup is 5.33 x 8 in (the artwork's 2:3 shape).
@@ -44,10 +44,10 @@ var MAX_RUN_MS = 4.5 * 60 * 1000;   // leave headroom under the 6-minute cap
 var BUILD_ATTEMPTS = 3;   // in-process retries around a single PDF build
 var MAX_ATTEMPTS = 5;     // how many separate runs a row gets before giving up
 
-// The approved artwork is 1024 x 1535 (approximately 2:3). Overlay positions below use this
+// The approved artwork is 1024 x 1536 (2:3). Overlay positions below use this
 // same coordinate space, then scale automatically to the Slides page.
 var TICKET_W_PX = 1024;
-var TICKET_H_PX = 1535;
+var TICKET_H_PX = 1536;
 
 /** Helper to get Spreadsheet by ID or active context */
 function getSpreadsheet() {
@@ -331,11 +331,11 @@ function buildTicketPdf(fullName, attendeeCount, uniqueID) {
 
     slide.insertImage(getTicketArtworkBlob(), offX, offY, drawW, drawH);
 
-    // Fill the dotted lines and the personalized note in the supplied artwork.
+    // Fill the dotted lines and personalize the welcome in the supplied artwork.
     addTicketField(slide, fullName,      at(330, 650), 26 * scale, '#171717', pageW, 560 * scale);
-    addTicketField(slide, attendeeCount, at(330, 836), 26 * scale, '#171717', pageW, 560 * scale);
-    addTicketField(slide, uniqueID,      at(466, 1028), 18, '#9f1118', pageW, 480 * scale);
-    addTicketNote(slide, fullName, at(341, 1224), pageW, 545 * scale, 100 * scale);
+    addTicketField(slide, attendeeCount, at(330, 800), 26 * scale, '#171717', pageW, 560 * scale);
+    addWelcomeName(slide, fullName, at(442, 892), 310 * scale, 62 * scale);
+    addTicketField(slide, uniqueID,      at(466, 1110), 18, '#9f1118', pageW, 430 * scale);
 
     presentation.saveAndClose();
 
@@ -388,22 +388,26 @@ function addTicketField(slide, text, pos, sizePt, color, pageW, requestedWidth) 
   return box;
 }
 
-/** Adds the warm, personalized entrance note in the space left blank by the artwork. */
-function addTicketNote(slide, fullName, pos, pageW, requestedWidth, requestedHeight) {
-  var note = 'We are so glad you will be with us, ' + String(fullName).trim() +
-    '. Please bring this pass and a valid ID to the entrance desk.';
-  var left = pos.x - 7.2;
+/** Places the submitted guest name inside the artwork's "Welcome, ____ !" line. */
+function addWelcomeName(slide, fullName, pos, requestedWidth, requestedHeight) {
+  var name = String(fullName || '').trim();
+  if (!name) return null;
+  var fontSize = name.length > 24 ? 12 : name.length > 17 ? 15 : 18;
   var box = slide.insertTextBox(
-    note,
-    left,
-    pos.y - 3.6,
-    Math.min(requestedWidth, pageW - left),
+    name,
+    pos.x,
+    pos.y,
+    requestedWidth,
     requestedHeight
   );
   box.getText().getTextStyle()
     .setFontFamily('Arial')
-    .setFontSize(10)
-    .setForegroundColor('#2b2320');
+    .setFontSize(fontSize)
+    .setBold(true)
+    .setItalic(true)
+    .setForegroundColor('#a71018');
+  box.getText().getParagraphStyle()
+    .setParagraphAlignment(SlidesApp.ParagraphAlignment.CENTER);
   return box;
 }
 

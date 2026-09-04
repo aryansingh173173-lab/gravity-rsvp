@@ -389,13 +389,17 @@ function addTicketField(slide, text, pos, sizePt, color, pageW, requestedWidth) 
 function addWelcomeName(slide, fullName, pos, requestedWidth, requestedHeight) {
   var name = String(fullName || '').trim();
   if (!name) return null;
-  var fontSize = name.length > 24 ? 12 : name.length > 17 ? 15 : 18;
+  // Leave enough room for Slides' built-in text-box padding so ordinary full
+  // names stay on one line inside the artwork's welcome underline.
+  var fontSize = name.length > 28 ? 9 : name.length > 22 ? 11 : name.length > 16 ? 13 : 15;
+  var insetX = 7.2;
+  var insetY = 3.6;
   var box = slide.insertTextBox(
     name,
-    pos.x,
-    pos.y,
-    requestedWidth,
-    requestedHeight
+    pos.x - insetX,
+    pos.y - insetY,
+    requestedWidth + insetX * 2,
+    requestedHeight + insetY * 2
   );
   box.getText().getTextStyle()
     .setFontFamily('Arial')

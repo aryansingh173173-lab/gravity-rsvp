@@ -26,9 +26,10 @@
 
 var SHEET_NAME = 'RSVPs';
 var SPREADSHEET_ID = '18tuY1IeFRz2XenryFE3kfXTiZxUbNa7Cs_4kExr9JU0';
-// Exact approved artwork from the repository. The space is URL-encoded so the
-// file used here is specifically "gravity invitations.png".
-var TEMPLATE_IMAGE_URL = 'https://raw.githubusercontent.com/aryansingh173173-lab/gravity-rsvp/main/gravity%20invitations.png';
+// Exact approved artwork uploaded to Google Drive as "gravity invitations.png".
+// Keep this as the only source so an older template can never be substituted.
+var TEMPLATE_IMAGE_ID = '1SFChtbXm50DMXR_dGHNwN9XX0oozPw0F';
+var TEMPLATE_IMAGE_URL = 'https://drive.google.com/uc?export=download&id=' + TEMPLATE_IMAGE_ID;
 
 // A blank Slides file whose page setup is 5.33 x 8 in (the artwork's 2:3 shape).
 // Slides.Presentations.create() ignores any pageSize you pass and the API cannot

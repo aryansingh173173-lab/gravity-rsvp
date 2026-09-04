@@ -26,10 +26,9 @@
 
 var SHEET_NAME = 'RSVPs';
 var SPREADSHEET_ID = '18tuY1IeFRz2XenryFE3kfXTiZxUbNa7Cs_4kExr9JU0';
-// The pass artwork is versioned with the site so future ticket generations use
-// the exact approved design. Keep the Drive ID as a fallback while deploying.
-var TEMPLATE_IMAGE_URL = 'https://raw.githubusercontent.com/aryansingh173173-lab/gravity-rsvp/main/gravity-invitations.png';
-var TEMPLATE_IMAGE_ID = '12CI_jNF7hBoHpv-BTBqcQqLSELuloAE4';
+// Exact approved artwork from the repository. The space is URL-encoded so the
+// file used here is specifically "gravity invitations.png".
+var TEMPLATE_IMAGE_URL = 'https://raw.githubusercontent.com/aryansingh173173-lab/gravity-rsvp/main/gravity%20invitations.png';
 
 // A blank Slides file whose page setup is 5.33 x 8 in (the artwork's 2:3 shape).
 // Slides.Presentations.create() ignores any pageSize you pass and the API cannot
@@ -349,19 +348,16 @@ function buildTicketPdf(fullName, attendeeCount, uniqueID) {
   return pdf;
 }
 
-/** Downloads the approved artwork, with the previous Drive image as a safe fallback. */
+/** Downloads the exact approved artwork. Fail instead of silently using an old design. */
 function getTicketArtworkBlob() {
-  try {
-    var response = UrlFetchApp.fetch(TEMPLATE_IMAGE_URL, {
-      muteHttpExceptions: true,
-      followRedirects: true
-    });
-    if (response.getResponseCode() === 200) return response.getBlob();
+  var response = UrlFetchApp.fetch(TEMPLATE_IMAGE_URL, {
+    muteHttpExceptions: true,
+    followRedirects: true
+  });
+  if (response.getResponseCode() !== 200) {
     throw new Error('Artwork download returned HTTP ' + response.getResponseCode());
-  } catch (err) {
-    Logger.log('Using Drive artwork fallback: ' + err.message);
-    return DriveApp.getFileById(TEMPLATE_IMAGE_ID).getBlob();
   }
+  return response.getBlob();
 }
 
 /** Places one non-empty line of guest data. Slides text boxes pad their contents, so back that out. */

@@ -28,7 +28,7 @@ var SHEET_NAME = 'RSVPs';
 var SPREADSHEET_ID = '18tuY1IeFRz2XenryFE3kfXTiZxUbNa7Cs_4kExr9JU0';
 // The pass artwork is versioned with the site so future ticket generations use
 // the exact approved design. Keep the Drive ID as a fallback while deploying.
-var TEMPLATE_IMAGE_URL = 'https://raw.githubusercontent.com/aryansingh173173-lab/gravity-rsvp/main/gravity-annual-day-pass-template.png';
+var TEMPLATE_IMAGE_URL = 'https://raw.githubusercontent.com/aryansingh173173-lab/gravity-rsvp/main/gravity-annual-day-pass-template-v2.png';
 var TEMPLATE_IMAGE_ID = '12CI_jNF7hBoHpv-BTBqcQqLSELuloAE4';
 
 // A blank Slides file whose page setup is 5.33 x 8 in (the artwork's 2:3 shape).
@@ -331,10 +331,11 @@ function buildTicketPdf(fullName, attendeeCount, uniqueID) {
 
     slide.insertImage(getTicketArtworkBlob(), offX, offY, drawW, drawH);
 
-    // Fill the three dotted lines in the supplied artwork.
+    // Fill the dotted lines and the personalized note in the supplied artwork.
     addTicketField(slide, fullName,      at(330, 650), 26 * scale, '#171717', pageW, 560 * scale);
     addTicketField(slide, attendeeCount, at(330, 836), 26 * scale, '#171717', pageW, 560 * scale);
-    addTicketField(slide, uniqueID,      at(466, 1028), 23 * scale, '#9f1118', pageW, 300 * scale);
+    addTicketField(slide, uniqueID,      at(466, 1028), 18, '#9f1118', pageW, 480 * scale);
+    addTicketNote(slide, fullName, at(341, 1224), pageW, 545 * scale, 100 * scale);
 
     presentation.saveAndClose();
 
@@ -384,6 +385,25 @@ function addTicketField(slide, text, pos, sizePt, color, pageW, requestedWidth) 
     .setFontSize(sizePt)
     .setBold(true)
     .setForegroundColor(color);
+  return box;
+}
+
+/** Adds the warm, personalized entrance note in the space left blank by the artwork. */
+function addTicketNote(slide, fullName, pos, pageW, requestedWidth, requestedHeight) {
+  var note = 'We are so glad you will be with us, ' + String(fullName).trim() +
+    '. Please bring this pass and a valid ID to the entrance desk.';
+  var left = pos.x - 7.2;
+  var box = slide.insertTextBox(
+    note,
+    left,
+    pos.y - 3.6,
+    Math.min(requestedWidth, pageW - left),
+    requestedHeight
+  );
+  box.getText().getTextStyle()
+    .setFontFamily('Arial')
+    .setFontSize(10)
+    .setForegroundColor('#2b2320');
   return box;
 }
 

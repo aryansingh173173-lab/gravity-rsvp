@@ -332,10 +332,11 @@ function buildTicketPdf(fullName, attendeeCount, uniqueID) {
     slide.insertImage(getTicketArtworkBlob(), offX, offY, drawW, drawH);
 
     // Fill the dotted lines and personalize the welcome in the supplied artwork.
-    addTicketField(slide, fullName,      at(330, 650), 26 * scale, '#171717', pageW, 560 * scale);
-    addTicketField(slide, attendeeCount, at(330, 800), 26 * scale, '#171717', pageW, 560 * scale);
+    // These Y positions put the text baseline directly on the artwork's dots.
+    addTicketField(slide, fullName,      at(330, 637), 26 * scale, '#171717', pageW, 560 * scale);
+    addTicketField(slide, attendeeCount, at(330, 792), 26 * scale, '#171717', pageW, 560 * scale);
     addWelcomeName(slide, fullName, at(442, 892), 310 * scale, 62 * scale);
-    addTicketField(slide, uniqueID,      at(466, 1110), 18, '#9f1118', pageW, 430 * scale);
+    addTicketField(slide, uniqueID,      at(466, 1092), 14, '#9f1118', pageW, 430 * scale);
 
     presentation.saveAndClose();
 

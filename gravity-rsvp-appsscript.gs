@@ -26,9 +26,9 @@
 
 var SHEET_NAME = 'RSVPs';
 var SPREADSHEET_ID = '18tuY1IeFRz2XenryFE3kfXTiZxUbNa7Cs_4kExr9JU0';
-// Approved invitation artwork, served by the RSVP app so every generated pass
-// uses the same deployed asset. This version has the note block and lower badge removed.
-var TEMPLATE_IMAGE_URL = 'https://gravity-rsvp.vercel.app/gravity-invitations.png?v=20260908-clean';
+// Exact "Gravity rsvp invitation.png" artwork supplied for emailed passes.
+// Keep a version query so Apps Script never reuses an older cached background.
+var TEMPLATE_IMAGE_URL = 'https://gravity-rsvp.vercel.app/Gravity%20rsvp%20invitation.png?v=20260908-rsvp-invitation';
 
 // A blank Slides file whose page setup is 5.33 x 8 in (the artwork's 2:3 shape).
 // Slides.Presentations.create() ignores any pageSize you pass and the API cannot
@@ -330,16 +330,19 @@ function buildTicketPdf(fullName, attendeeCount, uniqueID) {
 
     slide.insertImage(getTicketArtworkBlob(), offX, offY, drawW, drawH);
 
-    // Fill the dotted lines and personalize the welcome in the supplied artwork.
-    // These Y positions put the text baseline directly on the artwork's dots.
-    var guestNameLength = String(fullName || '').trim().length;
-    var guestNameSize = (guestNameLength > 34 ? 18 :
-                         guestNameLength > 27 ? 20 :
-                         guestNameLength > 20 ? 23 : 26) * scale;
-    addTicketField(slide, fullName,      at(330, 637), guestNameSize, '#171717', pageW, 560 * scale);
-    addTicketField(slide, attendeeCount, at(330, 792), 26 * scale, '#171717', pageW, 560 * scale);
-    addWelcomeName(slide, fullName, at(442, 892), 310 * scale, 62 * scale);
-    addTicketField(slide, uniqueID,      at(466, 1092), 14, '#9f1118', pageW, 430 * scale);
+    // Fill the four blanks in the supplied artwork. Font sizes are calculated
+    // from the available line width so even long names remain on one line.
+    var guestFieldWidth = 518 * scale;
+    var attendeeFieldWidth = 518 * scale;
+    var ticketFieldWidth = 356 * scale;
+    var guestNameSize = fitSingleLineFontSize(fullName, 12, 6.5, guestFieldWidth, 0.56);
+    var attendeeSize = fitSingleLineFontSize(attendeeCount, 12, 8, attendeeFieldWidth, 0.56);
+    var ticketIdSize = fitSingleLineFontSize(uniqueID, 13, 8, ticketFieldWidth, 0.58);
+
+    addTicketField(slide, fullName,      at(326, 646), guestNameSize, '#171717', pageW, guestFieldWidth);
+    addTicketField(slide, attendeeCount, at(326, 825), attendeeSize, '#171717', pageW, attendeeFieldWidth);
+    addTicketField(slide, uniqueID,      at(448, 966), ticketIdSize, '#9f1118', pageW, ticketFieldWidth);
+    addWelcomeName(slide, fullName, at(449, 1101), 268 * scale, 64 * scale);
 
     presentation.saveAndClose();
 
@@ -389,16 +392,31 @@ function addTicketField(slide, text, pos, sizePt, color, pageW, requestedWidth) 
   return box;
 }
 
+/** Estimates a conservative single-line font size for a fixed-width artwork blank. */
+function fitSingleLineFontSize(text, maxSizePt, minSizePt, widthPt, averageEm) {
+  var value = String(text == null ? '' : text).trim();
+  if (!value) return maxSizePt;
+
+  // Wide capitals count more than spaces and narrow punctuation. The safety
+  // factor leaves room for Slides' font metrics and prevents last-letter wrap.
+  var weightedLength = 0;
+  for (var i = 0; i < value.length; i++) {
+    var ch = value.charAt(i);
+    if (/\s/.test(ch)) weightedLength += 0.45;
+    else if (/[MW@#%&]/.test(ch)) weightedLength += 1.25;
+    else if (/[ilI1.,'`|]/.test(ch)) weightedLength += 0.5;
+    else weightedLength += 1;
+  }
+
+  var fitted = (widthPt * 0.9) / (Math.max(1, weightedLength) * (averageEm || 0.56));
+  return Math.max(minSizePt, Math.min(maxSizePt, Math.floor(fitted * 2) / 2));
+}
+
 /** Places the submitted guest name inside the artwork's "Welcome, ____ !" line. */
 function addWelcomeName(slide, fullName, pos, requestedWidth, requestedHeight) {
   var name = String(fullName || '').trim();
   if (!name) return null;
-  // Leave enough room for Slides' built-in text-box padding so ordinary full
-  // names stay on one line inside the artwork's welcome underline.
-  var fontSize = name.length > 30 ? 7 :
-                 name.length > 24 ? 8 :
-                 name.length > 18 ? 9 :
-                 name.length > 13 ? 10 : 12;
+  var fontSize = fitSingleLineFontSize(name, 11.5, 5.5, requestedWidth, 0.56);
   var insetX = 7.2;
   var insetY = 3.6;
   var box = slide.insertTextBox(

@@ -26,10 +26,9 @@
 
 var SHEET_NAME = 'RSVPs';
 var SPREADSHEET_ID = '18tuY1IeFRz2XenryFE3kfXTiZxUbNa7Cs_4kExr9JU0';
-// Exact approved artwork uploaded to Google Drive as "gravity invitations.png".
-// Keep this as the only source so an older template can never be substituted.
-var TEMPLATE_IMAGE_ID = '1SFChtbXm50DMXR_dGHNwN9XX0oozPw0F';
-var TEMPLATE_IMAGE_URL = 'https://drive.google.com/uc?export=download&id=' + TEMPLATE_IMAGE_ID;
+// Approved invitation artwork, served by the RSVP app so every generated pass
+// uses the same deployed asset. This version has the "Please Note" box removed.
+var TEMPLATE_IMAGE_URL = 'https://gravity-rsvp.vercel.app/gravity-invitations.png?v=20260908-no-note';
 
 // A blank Slides file whose page setup is 5.33 x 8 in (the artwork's 2:3 shape).
 // Slides.Presentations.create() ignores any pageSize you pass and the API cannot
@@ -333,7 +332,11 @@ function buildTicketPdf(fullName, attendeeCount, uniqueID) {
 
     // Fill the dotted lines and personalize the welcome in the supplied artwork.
     // These Y positions put the text baseline directly on the artwork's dots.
-    addTicketField(slide, fullName,      at(330, 637), 26 * scale, '#171717', pageW, 560 * scale);
+    var guestNameLength = String(fullName || '').trim().length;
+    var guestNameSize = (guestNameLength > 34 ? 18 :
+                         guestNameLength > 27 ? 20 :
+                         guestNameLength > 20 ? 23 : 26) * scale;
+    addTicketField(slide, fullName,      at(330, 637), guestNameSize, '#171717', pageW, 560 * scale);
     addTicketField(slide, attendeeCount, at(330, 792), 26 * scale, '#171717', pageW, 560 * scale);
     addWelcomeName(slide, fullName, at(442, 892), 310 * scale, 62 * scale);
     addTicketField(slide, uniqueID,      at(466, 1092), 14, '#9f1118', pageW, 430 * scale);
@@ -392,7 +395,10 @@ function addWelcomeName(slide, fullName, pos, requestedWidth, requestedHeight) {
   if (!name) return null;
   // Leave enough room for Slides' built-in text-box padding so ordinary full
   // names stay on one line inside the artwork's welcome underline.
-  var fontSize = name.length > 28 ? 9 : name.length > 22 ? 11 : name.length > 16 ? 13 : 15;
+  var fontSize = name.length > 30 ? 7 :
+                 name.length > 24 ? 8 :
+                 name.length > 18 ? 9 :
+                 name.length > 13 ? 10 : 12;
   var insetX = 7.2;
   var insetY = 3.6;
   var box = slide.insertTextBox(

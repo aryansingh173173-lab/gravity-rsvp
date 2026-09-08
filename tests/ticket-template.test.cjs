@@ -40,5 +40,7 @@ test('long names shrink while every dynamic value stays on a single artwork line
   assert.equal(shortNameSize, 12);
   assert.ok(longNameSize < shortNameSize);
   assert.ok(longNameSize >= 6.5);
-  assert.match(source, /addWelcomeName\(slide, fullName, at\(449, 1101\), 268 \* scale, 64 \* scale\)/);
+  assert.match(source, /positionTextAboveLine\(at\(326, 682\), guestNameSize, 2\)/);
+  assert.match(source, /addWelcomeName\(slide, fullName, at\(449, 1137\), 268 \* scale, 64 \* scale\)/);
+  assert.match(source, /var textPos = positionTextAboveLine\(pos, fontSize, 2\);/);
 });

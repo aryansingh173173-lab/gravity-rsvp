@@ -339,10 +339,11 @@ function buildTicketPdf(fullName, attendeeCount, uniqueID) {
     var attendeeSize = fitSingleLineFontSize(attendeeCount, 12, 8, attendeeFieldWidth, 0.56);
     var ticketIdSize = fitSingleLineFontSize(uniqueID, 13, 8, ticketFieldWidth, 0.58);
 
-    addTicketField(slide, fullName,      at(326, 646), guestNameSize, '#171717', pageW, guestFieldWidth);
+    var guestNamePos = positionTextAboveLine(at(326, 682), guestNameSize, 2);
+    addTicketField(slide, fullName,      guestNamePos, guestNameSize, '#171717', pageW, guestFieldWidth);
     addTicketField(slide, attendeeCount, at(326, 825), attendeeSize, '#171717', pageW, attendeeFieldWidth);
     addTicketField(slide, uniqueID,      at(448, 966), ticketIdSize, '#9f1118', pageW, ticketFieldWidth);
-    addWelcomeName(slide, fullName, at(449, 1101), 268 * scale, 64 * scale);
+    addWelcomeName(slide, fullName, at(449, 1137), 268 * scale, 64 * scale);
 
     presentation.saveAndClose();
 
@@ -412,17 +413,26 @@ function fitSingleLineFontSize(text, maxSizePt, minSizePt, widthPt, averageEm) {
   return Math.max(minSizePt, Math.min(maxSizePt, Math.floor(fitted * 2) / 2));
 }
 
+/** Anchors the bottom of a fitted name a small, consistent distance above its line. */
+function positionTextAboveLine(linePos, sizePt, gapPt) {
+  return {
+    x: linePos.x,
+    y: linePos.y - sizePt * 1.15 - (gapPt == null ? 2 : gapPt)
+  };
+}
+
 /** Places the submitted guest name inside the artwork's "Welcome, ____ !" line. */
 function addWelcomeName(slide, fullName, pos, requestedWidth, requestedHeight) {
   var name = String(fullName || '').trim();
   if (!name) return null;
   var fontSize = fitSingleLineFontSize(name, 11.5, 5.5, requestedWidth, 0.56);
+  var textPos = positionTextAboveLine(pos, fontSize, 2);
   var insetX = 7.2;
   var insetY = 3.6;
   var box = slide.insertTextBox(
     name,
-    pos.x - insetX,
-    pos.y - insetY,
+    textPos.x - insetX,
+    textPos.y - insetY,
     requestedWidth + insetX * 2,
     requestedHeight + insetY * 2
   );

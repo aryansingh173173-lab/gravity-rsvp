@@ -340,9 +340,10 @@ function buildTicketPdf(fullName, attendeeCount, uniqueID) {
     var ticketIdSize = fitSingleLineFontSize(uniqueID, 13, 8, ticketFieldWidth, 0.58);
 
     var guestNamePos = positionTextAboveLine(at(326, 682), guestNameSize, 2);
+    var ticketIdPos = positionTextAboveLine(at(448, 1002), ticketIdSize, 2);
     addTicketField(slide, fullName,      guestNamePos, guestNameSize, '#171717', pageW, guestFieldWidth);
     addTicketField(slide, attendeeCount, at(326, 825), attendeeSize, '#171717', pageW, attendeeFieldWidth);
-    addTicketField(slide, uniqueID,      at(448, 966), ticketIdSize, '#9f1118', pageW, ticketFieldWidth);
+    addTicketField(slide, uniqueID,      ticketIdPos, ticketIdSize, '#9f1118', pageW, ticketFieldWidth);
     addWelcomeName(slide, fullName, at(449, 1137), 268 * scale, 64 * scale);
 
     presentation.saveAndClose();

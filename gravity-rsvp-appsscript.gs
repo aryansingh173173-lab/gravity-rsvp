@@ -27,8 +27,8 @@
 var SHEET_NAME = 'RSVPs';
 var SPREADSHEET_ID = '18tuY1IeFRz2XenryFE3kfXTiZxUbNa7Cs_4kExr9JU0';
 // Approved invitation artwork, served by the RSVP app so every generated pass
-// uses the same deployed asset. This version has the "Please Note" box removed.
-var TEMPLATE_IMAGE_URL = 'https://gravity-rsvp.vercel.app/gravity-invitations.png?v=20260908-no-note';
+// uses the same deployed asset. This version has the note block and lower badge removed.
+var TEMPLATE_IMAGE_URL = 'https://gravity-rsvp.vercel.app/gravity-invitations.png?v=20260908-clean';
 
 // A blank Slides file whose page setup is 5.33 x 8 in (the artwork's 2:3 shape).
 // Slides.Presentations.create() ignores any pageSize you pass and the API cannot

@@ -4,15 +4,17 @@ const path = require('path');
 
 const PORT = process.env.PORT || 3000;
 const SPREADSHEET_ID = '18tuY1IeFRz2XenryFE3kfXTiZxUbNa7Cs_4kExr9JU0';
+const RATE_WINDOW_MS = 10 * 60 * 1000;
+const RATE_LIMIT = 30;
+const rateBuckets = new Map();
 
 // Load environment variables from .env file
 function loadEnv() {
   const envPath = path.join(__dirname, '.env');
-  console.log(`[loadEnv] Reading .env from path: ${envPath}`);
   if (fs.existsSync(envPath)) {
     const fileContent = fs.readFileSync(envPath, 'utf8');
-    console.log(`[loadEnv] Found file. Content length: ${fileContent.length}`);
     const lines = fileContent.split('\n');
+    let loaded = 0;
     lines.forEach(line => {
       const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
       if (match) {
@@ -27,11 +29,10 @@ function loadEnv() {
           val = val.substring(1, val.length - 1);
         }
         process.env[key] = val;
-        console.log(`[loadEnv] Processed: ${key} = ${val}`);
+        loaded++;
       }
     });
-  } else {
-    console.log(`[loadEnv] File NOT found at: ${envPath}`);
+    console.log(`[loadEnv] Loaded ${loaded} local environment variable(s).`);
   }
 }
 
@@ -57,14 +58,17 @@ async function sendToAppsScript(payload) {
     return { result: 'error', message: 'Apps Script URL not configured in .env' };
   }
 
-  console.log(`Forwarding RSVP payload to Apps Script: ${url}`);
+  const forwardedPayload = { ...payload };
+  if (process.env.APPS_SCRIPT_SHARED_SECRET) {
+    forwardedPayload._proxySecret = process.env.APPS_SCRIPT_SHARED_SECRET;
+  }
   
   // Use global fetch (supported natively in Node.js 18+)
   if (typeof fetch !== 'undefined') {
     try {
       const response = await fetch(url, {
         method: 'POST',
-        body: JSON.stringify(payload),
+        body: JSON.stringify(forwardedPayload),
         headers: { 'Content-Type': 'application/json' }
       });
       const responseText = await response.text();
@@ -122,13 +126,35 @@ async function sendToAppsScript(payload) {
         });
 
         req.on('error', (err) => reject(err));
-        req.write(JSON.stringify(payload));
+        req.write(JSON.stringify(forwardedPayload));
         req.end();
       }
       
       makeRequest(url);
     });
   }
+}
+
+function isRateLimited(req) {
+  const now = Date.now();
+  const ip = req.socket.remoteAddress || 'unknown';
+  const bucket = (rateBuckets.get(ip) || []).filter(time => now - time < RATE_WINDOW_MS);
+  bucket.push(now);
+  rateBuckets.set(ip, bucket);
+  return bucket.length > RATE_LIMIT;
+}
+
+function validatePayload(payload) {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return 'Invalid request body.';
+  if (String(payload._website || '').trim()) return 'Invalid request body.';
+  if (!String(payload.fullName || '').trim() || String(payload.fullName).length > 120) return 'Invalid full name.';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(payload.email || '').trim())) return 'Invalid email address.';
+  if (!String(payload.mobile || '').trim() || String(payload.mobile).length > 30) return 'Invalid mobile number.';
+  if (!['Attending', 'Not Attending'].includes(payload.attending)) return 'Invalid attendance value.';
+  const guests = Number(payload.guestCount || 0);
+  if (!Number.isInteger(guests) || guests < 0 || guests > 20) return 'Invalid guest count.';
+  if (String(payload.specialRequirements || '').length > 1000) return 'Special requirements are too long.';
+  return '';
 }
 
 const server = http.createServer((req, res) => {
@@ -143,7 +169,11 @@ const server = http.createServer((req, res) => {
 
   // Handle API submissions
   if (req.method === 'POST' && safeUrl === '/api/rsvp') {
-    console.log("\n--- Received RSVP Submission ---");
+    if (isRateLimited(req)) {
+      res.writeHead(429, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ result: 'error', message: 'Too many submissions. Please try again shortly.' }));
+      return;
+    }
     let body = '';
     req.on('data', chunk => {
       body += chunk.toString();
@@ -151,12 +181,15 @@ const server = http.createServer((req, res) => {
     req.on('end', async () => {
       try {
         loadEnv(); // Reload environment variables dynamically
-        console.log(`Configured APPS_SCRIPT_URL: ${process.env.APPS_SCRIPT_URL}`);
         const payload = JSON.parse(body);
-        console.log("Payload received:", JSON.stringify(payload, null, 2));
+        const validationError = validatePayload(payload);
+        if (validationError) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ result: 'error', message: validationError }));
+          return;
+        }
         
         const result = await sendToAppsScript(payload);
-        console.log("Apps Script response:", JSON.stringify(result, null, 2));
         
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(result));

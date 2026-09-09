@@ -472,6 +472,14 @@
 
   input[type="radio"], input[type="checkbox"] { display: none; }
 
+  .website-trap {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
   .suggest-chip {
     font-family: 'Inter', sans-serif;
     font-size: 13px;
@@ -898,6 +906,11 @@
   <!-- Form Card -->
   <div class="form-card" id="form-card">
 
+    <div class="website-trap" aria-hidden="true">
+      <label for="company-website">Leave this field blank</label>
+      <input type="text" id="company-website" name="company_website" tabindex="-1" autocomplete="off">
+    </div>
+
     <!-- ── Step 1 ── -->
     <div class="step active" id="step-1">
       <div class="section-header">
@@ -939,8 +952,23 @@
       </div>
       <div class="field-group">
         <label class="field-label" for="mobile">Mobile Number <span class="req">*</span></label>
-        <input type="tel" id="mobile" placeholder="e.g. +91 98765 43210">
-        <div class="error-msg" id="err-mobile">Please enter your mobile number.</div>
+        <div class="field-help">Include the country code for numbers outside India</div>
+        <input type="tel" id="mobile" placeholder="e.g. +91 98765 43210" autocomplete="tel">
+        <div class="error-msg" id="err-mobile">Please enter a valid mobile number with country code.</div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">WhatsApp Delivery</div>
+        <div class="field-help">Email delivery remains available even if you do not opt in.</div>
+        <div class="check-group">
+          <div class="check-option" id="whatsapp-consent-option" role="checkbox" aria-checked="false" tabindex="0"
+               onclick="toggleWhatsAppConsent(this)"
+               onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleWhatsAppConsent(this);}">
+            <input type="checkbox" id="whatsapp-consent">
+            <div class="custom-check" aria-hidden="true"></div>
+            <span class="option-text">I agree to receive my Gravity Annual Day invitation and event updates on WhatsApp at the mobile number entered above.</span>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -1031,7 +1059,7 @@
       </svg>
       <div>
         <strong>Your e-pass is on its way</strong>
-        <p>We're emailing your entry pass to <span id="epass-email">the address above</span> — it usually arrives within a minute. Please download or save the PDF, and bring it on your phone or printed to the entrance desk.</p>
+        <p id="epass-delivery">We're emailing your entry pass to the address above. Please download or save the PDF, and bring it on your phone or printed to the entrance desk.</p>
       </div>
     </div>
 
@@ -1129,6 +1157,30 @@
     hideErr('err-email');
   }
 
+  function normalizeWhatsAppNumber(raw) {
+    var value = String(raw || '').trim();
+    if (!value || /[a-z]/i.test(value)) return '';
+
+    var digits = value.replace(/\D/g, '');
+    if (digits.indexOf('00') === 0) digits = digits.substring(2);
+    if (digits.length === 11 && digits.charAt(0) === '0') digits = digits.substring(1);
+    if (digits.length === 10) {
+      if (!/^[6-9]/.test(digits)) return '';
+      digits = '91' + digits;
+    }
+
+    if (!/^[1-9]\d{7,14}$/.test(digits)) return '';
+    if (digits.indexOf('91') === 0 && (digits.length !== 12 || !/^[6-9]/.test(digits.substring(2)))) return '';
+    return digits;
+  }
+
+  function toggleWhatsAppConsent(el) {
+    var input = document.getElementById('whatsapp-consent');
+    input.checked = !input.checked;
+    el.classList.toggle('selected', input.checked);
+    el.setAttribute('aria-checked', input.checked ? 'true' : 'false');
+  }
+
   function selectRadio(name, value, el) {
     radioValues[name] = value;
     var group = el.closest('.radio-group');
@@ -1170,7 +1222,7 @@
   function validateStep2() {
     var ok = true;
     var mobile = document.getElementById('mobile').value.trim();
-    if (!mobile) { showErr('err-mobile'); document.getElementById('mobile').classList.add('error'); ok = false; }
+    if (!normalizeWhatsAppNumber(mobile)) { showErr('err-mobile'); document.getElementById('mobile').classList.add('error'); ok = false; }
     else { hideErr('err-mobile'); document.getElementById('mobile').classList.remove('error'); }
 
     return ok;
@@ -1271,6 +1323,7 @@
     var mobile = document.getElementById('mobile').value.trim();
     var specialEl = document.getElementById('special');
     var specialRequirements = specialEl ? specialEl.value.trim() : '';
+    var whatsappConsent = document.getElementById('whatsapp-consent').checked;
     var withGuest = radioValues['guest'] === 'yes';
     var guests = withGuest ? (radioValues['guestcount'] || '1') : '0';
 
@@ -1288,7 +1341,9 @@
         attending: 'Attending',
         guestCount: guests,
         meal: '',
-        specialRequirements: specialRequirements
+        specialRequirements: specialRequirements,
+        whatsappConsent: whatsappConsent,
+        _website: document.getElementById('company-website').value
       });
     } catch (err) {
       alert('We could not save your RSVP. Please try again.\n\n' + err.message);
@@ -1308,8 +1363,12 @@
 
     document.getElementById('confirm-detail').innerHTML = html;
 
-    var epassEmail = document.getElementById('epass-email');
-    if (epassEmail && email) epassEmail.textContent = email;
+    var epassDelivery = document.getElementById('epass-delivery');
+    if (epassDelivery) {
+      epassDelivery.textContent = whatsappConsent
+        ? 'We are emailing your entry pass to ' + email + ' and have also queued it for WhatsApp delivery to ' + mobile + '. Please save the PDF and bring it on your phone or printed.'
+        : 'We are emailing your entry pass to ' + email + '. Please save the PDF and bring it on your phone or printed.';
+    }
     document.getElementById('form-card').style.display = 'none';
     document.querySelector('.progress-wrap').style.display = 'none';
 
@@ -1324,6 +1383,7 @@
     var mobile = document.getElementById('mobile').value.trim();
     var specialEl = document.getElementById('special');
     var specialRequirements = specialEl ? specialEl.value.trim() : '';
+    var whatsappConsent = document.getElementById('whatsapp-consent').checked;
 
     try {
       await postToSheet({
@@ -1333,7 +1393,9 @@
         attending: 'Not Attending',
         guestCount: '0',
         meal: '',
-        specialRequirements: specialRequirements
+        specialRequirements: specialRequirements,
+        whatsappConsent: whatsappConsent,
+        _website: document.getElementById('company-website').value
       });
     } catch (err) {
       alert('We could not save your RSVP. Please try again.\n\n' + err.message);

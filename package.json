@@ -4,7 +4,11 @@
   "description": "Gravity RSVP Site Server",
   "main": "server.js",
   "scripts": {
-    "dev": "node --use-system-ca server.js"
+    "dev": "node --use-system-ca server.js",
+    "test": "node --test \"tests/*.test.cjs\""
+  },
+  "engines": {
+    "node": ">=18"
   },
   "keywords": [],
   "author": "",

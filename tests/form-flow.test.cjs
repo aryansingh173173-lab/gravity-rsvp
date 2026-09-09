@@ -19,7 +19,9 @@ function setup() {
           add: (...names) => names.forEach(name => classes.add(name)),
           remove: (...names) => names.forEach(name => classes.delete(name)),
           contains: name => classes.has(name),
+          toggle: (name, force) => force ? classes.add(name) : classes.delete(name),
         },
+        setAttribute() {},
       });
     }
     return elements.get(id);
@@ -39,7 +41,7 @@ function setup() {
 test('fields are separated into four distinct steps with unique IDs', () => {
   const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
   assert.equal(ids.length, new Set(ids).size);
-  const expected = [['fullname', 'email'], ['mobile'], ['guest-question'], ['guest-value']];
+  const expected = [['fullname', 'email'], ['mobile', 'whatsapp-consent'], ['guest-question'], ['guest-value']];
   const steps = html.split(/<div class="step(?: active)?" id="step-\d">/).slice(1);
   assert.equal(steps.length, 4);
   expected.forEach((fields, index) => {
@@ -87,6 +89,7 @@ for (const guest of ['yes', 'no']) {
     assert.equal(payload().fullName, 'Test Attendee');
     assert.equal(payload().mobile, '+91 98765 43210');
     assert.equal(payload().guestCount, guest === 'yes' ? '3' : '0');
+    assert.equal(payload().whatsappConsent, false);
     assert.equal(el('form-card').style.display, 'none');
   });
 }
@@ -95,7 +98,7 @@ test('changing guest answer skips count without losing contact details', () => {
   const { context: c, element: el } = setup();
   el('fullname').value = 'Test Attendee';
   el('email').value = 'test@example.com';
-  el('mobile').value = '1234567890';
+  el('mobile').value = '9876543210';
   c.goNext(); c.goNext();
   c.radioValues.guest = 'yes';
   c.goNext(); c.changeGuests(1); c.goBack();
@@ -106,6 +109,23 @@ test('changing guest answer skips count without losing contact details', () => {
   c.goBack(); c.goBack();
   assert.equal(c.currentStep, 1);
   assert.equal(el('fullname').value, 'Test Attendee');
-  assert.equal(el('mobile').value, '1234567890');
+  assert.equal(el('mobile').value, '9876543210');
   assert.match(el('btn-next').innerHTML, /Submit/);
+});
+
+test('WhatsApp consent is explicit and phone numbers are normalized safely', async () => {
+  const { context: c, element: el, payload } = setup();
+  assert.equal(c.normalizeWhatsAppNumber('98765 43210'), '919876543210');
+  assert.equal(c.normalizeWhatsAppNumber('+91 98765-43210'), '919876543210');
+  assert.equal(c.normalizeWhatsAppNumber('+44 7700 900123'), '447700900123');
+  assert.equal(c.normalizeWhatsAppNumber('12345'), '');
+  assert.equal(c.normalizeWhatsAppNumber('1234567890'), '');
+
+  el('fullname').value = 'WhatsApp Test';
+  el('email').value = 'whatsapp@example.com';
+  el('mobile').value = '+91 98765 43210';
+  el('whatsapp-consent').checked = true;
+  c.radioValues.guest = 'no';
+  await c.submitForm();
+  assert.equal(payload().whatsappConsent, true);
 });

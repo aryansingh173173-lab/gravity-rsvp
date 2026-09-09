@@ -1,0 +1,86 @@
+services:
+  - type: web
+    name: gravity-rsvp-evolution
+    runtime: image
+    plan: free
+    region: singapore
+    image:
+      url: docker.io/evoapicloud/evolution-api:v2.3.7
+    healthCheckPath: /
+    envVars:
+      - key: SERVER_URL
+        sync: false
+      - key: SERVER_PORT
+        value: "10000"
+      - key: SERVER_DISABLE_DOCS
+        value: "true"
+      - key: SERVER_DISABLE_MANAGER
+        value: "true"
+      - key: CORS_ORIGIN
+        value: https://gravity-rsvp.vercel.app
+      - key: CORS_METHODS
+        value: GET,POST,PUT,DELETE
+      - key: CORS_CREDENTIALS
+        value: "false"
+      - key: DATABASE_PROVIDER
+        value: postgresql
+      - key: DATABASE_CONNECTION_URI
+        sync: false
+      - key: DATABASE_CONNECTION_CLIENT_NAME
+        value: gravity_rsvp_evolution
+      - key: DATABASE_SAVE_DATA_INSTANCE
+        value: "true"
+      - key: DATABASE_SAVE_DATA_NEW_MESSAGE
+        value: "false"
+      - key: DATABASE_SAVE_MESSAGE_UPDATE
+        value: "false"
+      - key: DATABASE_SAVE_DATA_CONTACTS
+        value: "false"
+      - key: DATABASE_SAVE_DATA_CHATS
+        value: "false"
+      - key: DATABASE_SAVE_DATA_HISTORIC
+        value: "false"
+      - key: DATABASE_SAVE_DATA_LABELS
+        value: "false"
+      - key: DATABASE_SAVE_IS_ON_WHATSAPP
+        value: "false"
+      - key: DATABASE_DELETE_MESSAGE
+        value: "false"
+      - key: CACHE_REDIS_ENABLED
+        value: "false"
+      - key: CACHE_REDIS_SAVE_INSTANCES
+        value: "false"
+      - key: CACHE_LOCAL_ENABLED
+        value: "true"
+      - key: CACHE_LOCAL_TTL
+        value: "86400"
+      - key: AUTHENTICATION_API_KEY
+        generateValue: true
+      - key: AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES
+        value: "false"
+      - key: DEL_INSTANCE
+        value: "false"
+      - key: DEL_TEMP_INSTANCES
+        value: "false"
+      - key: CONFIG_SESSION_PHONE_CLIENT
+        value: Gravity RSVP
+      - key: CONFIG_SESSION_PHONE_NAME
+        value: Chrome
+      - key: QRCODE_LIMIT
+        value: "30"
+      - key: LANGUAGE
+        value: en
+      - key: LOG_LEVEL
+        value: ERROR,WARN,INFO
+      - key: LOG_COLOR
+        value: "true"
+      - key: LOG_BAILEYS
+        value: error
+      - key: WEBSOCKET_ENABLED
+        value: "false"
+      - key: WEBSOCKET_GLOBAL_EVENTS
+        value: "false"
+      - key: TELEMETRY_ENABLED
+        value: "false"
+      - key: S3_ENABLED
+        value: "false"

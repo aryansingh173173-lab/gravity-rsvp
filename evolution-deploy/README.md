@@ -107,6 +107,27 @@ deployment, create a regular Git-backed Web Service instead:
 The wrapper Dockerfile inherits the official image's startup command and pins
 the same `v2.3.7` release as the Blueprint.
 
+### AWS EC2 reconnect-patched image
+
+Some WhatsApp multi-device logins emit a normal `515` reconnect followed by a
+`401 device_removed` event. Evolution API 2.3.7 can misclassify that sequence as
+a permanent logout (upstream issue `evolution-foundation/evolution-api#2498`).
+
+`Dockerfile.aws-patched` builds the official `2.3.7` tag from source and applies
+only the 30-second reconnect guard proposed for that issue. It does not change
+the API contract, database migrations, or message endpoints.
+
+Build it on EC2 from this directory:
+
+```bash
+docker build -f Dockerfile.aws-patched -t gravity-rsvp-evolution:2.3.7-515fix .
+```
+
+The build requires more memory than the runtime container. On a 2 GB EC2
+instance, create temporary swap before building and remove it after the patched
+image is running. Continue to mount `evolution_instances` at
+`/evolution/instances` and bind the API only to `127.0.0.1:10000` behind Caddy.
+
 ## 3. Create and connect the instance
 
 Run these requests from a trusted terminal, replacing the placeholders locally.

@@ -1,0 +1,48 @@
+# syntax=docker/dockerfile:1
+
+# Build the official Evolution API 2.3.7 source with the narrowly scoped
+# reconnect fix tracked upstream in evolution-foundation/evolution-api#2498.
+FROM node:24-alpine AS builder
+
+RUN apk add --no-cache bash curl ffmpeg git openssl wget
+
+WORKDIR /evolution
+
+RUN git clone --depth 1 --branch 2.3.7 \
+    https://github.com/evolution-foundation/evolution-api.git .
+
+COPY patches/evolution-2.3.7-reconnect-515.patch /tmp/evolution-2.3.7-reconnect-515.patch
+
+RUN git apply --check /tmp/evolution-2.3.7-reconnect-515.patch && \
+    git apply /tmp/evolution-2.3.7-reconnect-515.patch && \
+    npm ci --silent && \
+    chmod +x ./Docker/scripts/* && \
+    ./Docker/scripts/generate_database.sh && \
+    npm run build
+
+FROM node:24-alpine AS final
+
+RUN apk add --no-cache bash ffmpeg openssl tzdata
+
+ENV TZ=Asia/Kolkata \
+    DOCKER_ENV=true \
+    SERVER_TYPE=http \
+    SERVER_PORT=10000
+
+WORKDIR /evolution
+
+COPY --from=builder /evolution/package.json ./package.json
+COPY --from=builder /evolution/package-lock.json ./package-lock.json
+COPY --from=builder /evolution/node_modules ./node_modules
+COPY --from=builder /evolution/dist ./dist
+COPY --from=builder /evolution/prisma ./prisma
+COPY --from=builder /evolution/manager ./manager
+COPY --from=builder /evolution/public ./public
+COPY --from=builder /evolution/.env ./.env
+COPY --from=builder /evolution/Docker ./Docker
+COPY --from=builder /evolution/runWithProvider.js ./runWithProvider.js
+COPY --from=builder /evolution/tsup.config.ts ./tsup.config.ts
+
+EXPOSE 10000
+
+ENTRYPOINT ["/bin/bash", "-c", ". ./Docker/scripts/deploy_database.sh && npm run start:prod"]

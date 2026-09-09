@@ -10,6 +10,7 @@ const proxy = fs.readFileSync(path.join(root, 'api', 'rsvp.js'), 'utf8');
 const render = fs.readFileSync(path.join(root, 'evolution-deploy', 'render.yaml'), 'utf8');
 const evolutionEnv = fs.readFileSync(path.join(root, 'evolution-deploy', 'example.env'), 'utf8');
 const supabaseSetup = fs.readFileSync(path.join(root, 'evolution-deploy', 'supabase-setup.sql'), 'utf8');
+const dockerfile = fs.readFileSync(path.join(root, 'evolution-deploy', 'Dockerfile'), 'utf8');
 
 test('spreadsheet migration preserves A:J and appends the WhatsApp audit columns', () => {
   const setup = appsScript.match(/function setupSheet[\s\S]*?\n}/)[0];
@@ -108,4 +109,11 @@ test('deployment examples isolate Evolution in Supabase without storing RSVP rec
   assert.match(supabaseSetup, /revoke all on schema evolution_api from anon, authenticated/i);
   assert.doesNotMatch(supabaseSetup, /create table/i);
   assert.doesNotMatch(evolutionEnv, /SUPABASE_(?:ANON|SERVICE_ROLE)_KEY=/);
+});
+
+test('Git-backed Render deployment inherits the pinned Evolution image', () => {
+  assert.match(dockerfile, /FROM docker\.io\/evoapicloud\/evolution-api:v2\.3\.7/);
+  assert.match(dockerfile, /SERVER_PORT=10000/);
+  assert.match(dockerfile, /EXPOSE 10000/);
+  assert.doesNotMatch(dockerfile, /CMD|ENTRYPOINT/);
 });

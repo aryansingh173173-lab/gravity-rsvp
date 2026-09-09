@@ -91,6 +91,22 @@ Render Free sleeps after inactivity and is intended only for the pilot. Complete
 the restart and cold-start tests in `EVOLUTION_API_INTEGRATION_SPEC.md` before
 using the service for guest invitations.
 
+### Git-backed Dockerfile alternative
+
+If Render requires card verification for an **Existing Image** or Blueprint
+deployment, create a regular Git-backed Web Service instead:
+
+1. Choose **New > Web Service** and connect this GitHub repository.
+2. Set **Root Directory** to `evolution-deploy`.
+3. Select **Docker** as the runtime. Render will use `Dockerfile` from that
+   directory; do not enter Yarn build or start commands.
+4. Choose the **Free** instance.
+5. Set the health-check path to `/`.
+6. Paste the variables from `example.env`, replacing the required inputs.
+
+The wrapper Dockerfile inherits the official image's startup command and pins
+the same `v2.3.7` release as the Blueprint.
+
 ## 3. Create and connect the instance
 
 Run these requests from a trusted terminal, replacing the placeholders locally.

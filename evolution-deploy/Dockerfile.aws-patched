@@ -4,6 +4,12 @@
 # reconnect fix tracked upstream in evolution-foundation/evolution-api#2498.
 FROM node:24-alpine AS builder
 
+# Prisma client generation needs to know which schema to use. Keep build-time
+# configuration non-secret; the real connection URI is supplied at runtime by
+# Docker's --env-file option.
+ENV DOCKER_ENV=true \
+    DATABASE_PROVIDER=postgresql
+
 RUN apk add --no-cache bash curl ffmpeg git openssl wget
 
 WORKDIR /evolution
@@ -38,7 +44,6 @@ COPY --from=builder /evolution/dist ./dist
 COPY --from=builder /evolution/prisma ./prisma
 COPY --from=builder /evolution/manager ./manager
 COPY --from=builder /evolution/public ./public
-COPY --from=builder /evolution/.env ./.env
 COPY --from=builder /evolution/Docker ./Docker
 COPY --from=builder /evolution/runWithProvider.js ./runWithProvider.js
 COPY --from=builder /evolution/tsup.config.ts ./tsup.config.ts

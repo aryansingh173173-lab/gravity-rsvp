@@ -4,12 +4,6 @@
 # reconnect fix tracked upstream in evolution-foundation/evolution-api#2498.
 FROM node:24-alpine AS builder
 
-# Prisma client generation needs to know which schema to use. Keep build-time
-# configuration non-secret; the real connection URI is supplied at runtime by
-# Docker's --env-file option.
-ENV DOCKER_ENV=true \
-    DATABASE_PROVIDER=postgresql
-
 RUN apk add --no-cache bash curl ffmpeg git openssl wget
 
 WORKDIR /evolution
@@ -18,6 +12,12 @@ RUN git clone --depth 1 --branch 2.3.7 \
     https://github.com/evolution-foundation/evolution-api.git .
 
 COPY patches/evolution-2.3.7-reconnect-515.patch /tmp/evolution-2.3.7-reconnect-515.patch
+
+# Prisma client generation needs to know which schema to use. Keep build-time
+# configuration non-secret; the real connection URI is supplied at runtime by
+# Docker's --env-file option.
+ENV DOCKER_ENV=true \
+    DATABASE_PROVIDER=postgresql
 
 RUN git apply --check /tmp/evolution-2.3.7-reconnect-515.patch && \
     git apply /tmp/evolution-2.3.7-reconnect-515.patch && \

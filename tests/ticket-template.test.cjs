@@ -18,6 +18,8 @@ test('ticket generator fills only the three artwork fields', () => {
   const build = source.match(/function buildTicketPdf[\s\S]*?\n}\n\n\/\*\*/)[0];
   const calls = [...build.matchAll(/addTicketField\(slide,/g)];
   assert.equal(calls.length, 3);
+  assert.equal([...build.matchAll(/addTicketField\(slide,\s*attendeeCount,/g)].length, 1);
+  assert.doesNotMatch(build, /at\(326, 825\)/);
   assert.match(build, /fullName/);
   assert.match(build, /attendeeCount/);
   assert.match(build, /uniqueID/);

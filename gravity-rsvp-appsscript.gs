@@ -31,7 +31,7 @@ var SHEET_NAME = 'RSVPs';
 var SPREADSHEET_ID = '18tuY1IeFRz2XenryFE3kfXTiZxUbNa7Cs_4kExr9JU0';
 // Exact "LAST TEMPLATE.png" artwork supplied for emailed and WhatsApp passes.
 // Keep a version query so Apps Script never reuses an older cached background.
-var TEMPLATE_IMAGE_URL = 'https://gravity-rsvp.vercel.app/LAST%20TEMPLATE.png?v=20260910-foundation-day';
+var TEMPLATE_IMAGE_URL = 'https://gravity-rsvp.vercel.app/LAST%20TEMPLATE.png?v=20260910-foundation-day-v2';
 
 // A blank Slides file whose page setup is 5.33 x 8 in (the artwork's 2:3 shape).
 // Slides.Presentations.create() ignores any pageSize you pass and the API cannot
@@ -666,11 +666,12 @@ function sendTicketWhatsApp(fullName, number, guestCount, uniqueID, config) {
     .replace(/^_+|_+$/g, '') || 'Guest';
   var fileName = 'Gravity_Pass_' + safeName + '_' + uniqueID + '.pdf';
   var mediaBlob = pdfAttachment.copyBlob().setName(fileName);
-  var caption = 'Hello ' + fullName + '! 👋\n\n' +
-    'Thank you for confirming your RSVP for Gravity Annual Day 2026! 🎉 ' +
+  var caption = 'Hello ' + fullName + '👋\n\n' +
+    'Thank you for confirming your RSVP for 12th Gravity Foundation Day! 🎉 ' +
     'We’re delighted to have you join us for the celebration. ✨\n\n' +
     '🎟️ Your personalised entry pass is attached. Please keep it handy for a smooth entry.\n\n' +
     'Ticket ID: ' + uniqueID + '\n\n' +
+    '📍 Venue Location: https://maps.app.goo.gl/J7xcZGSBWMUaD1v86?g_st=ic\n\n' +
     'We can’t wait to celebrate this special evening with you! 🌟';
   var url = config.baseUrl + '/message/sendMedia/' + encodeURIComponent(config.instanceName);
   var response;
@@ -1100,12 +1101,14 @@ function sendTicketEmail(fullName, email, guestCount, uniqueID, meal) {
 
   MailApp.sendEmail({
     to: email,
-    subject: 'Your Official Entry Pass — Gravity Annual Day 2026',
-    body: 'Dear ' + fullName + ',\n\n' +
-          'Thank you for your RSVP. Please find your attached designer entry PDF ticket ' +
-          'for the Gravity Annual Day 2026 celebration.\n\n' +
-          'We look forward to welcoming you.\n\n' +
-          'Warm regards,\nTeam Gravity',
+    subject: 'Your Official Entry Pass — 12th Gravity Foundation Day',
+    body: 'Hello ' + fullName + '👋\n\n' +
+          'Thank you for confirming your RSVP for 12th Gravity Foundation Day! 🎉 ' +
+          'We’re delighted to have you join us for the celebration. ✨\n\n' +
+          '🎟️ Your personalised entry pass is attached. Please keep it handy for a smooth entry.\n\n' +
+          'Ticket ID: ' + uniqueID + '\n\n' +
+          '📍 Venue Location: https://maps.app.goo.gl/J7xcZGSBWMUaD1v86?g_st=ic\n\n' +
+          'We can’t wait to celebrate this special evening with you! 🌟',
     attachments: [pdfAttachment]
   });
 }

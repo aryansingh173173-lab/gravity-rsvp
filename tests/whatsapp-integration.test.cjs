@@ -89,16 +89,44 @@ test('PDF uploads preserve numeric Sheet phone cells as JSON strings and encode 
     assert.equal(payload.mimetype, 'application/pdf');
     assert.deepEqual([...Buffer.from(payload.media, 'base64')], pdfBytes);
     assert.equal(payload.file, undefined);
-    assert.equal(payload.caption, 'Hello Test Guest! 👋\n\n' +
-      'Thank you for confirming your RSVP for Gravity Annual Day 2026! 🎉 ' +
+    assert.equal(payload.caption, 'Hello Test Guest👋\n\n' +
+      'Thank you for confirming your RSVP for 12th Gravity Foundation Day! 🎉 ' +
       'We’re delighted to have you join us for the celebration. ✨\n\n' +
       '🎟️ Your personalised entry pass is attached. Please keep it handy for a smooth entry.\n\n' +
       'Ticket ID: TEST-ID\n\n' +
+      '📍 Venue Location: https://maps.app.goo.gl/J7xcZGSBWMUaD1v86?g_st=ic\n\n' +
       'We can’t wait to celebrate this special evening with you! 🌟');
   }
   assert.throws(() => send('Test Guest', 'invalid', '0', 'TEST-ID', {}), /Invalid WhatsApp/);
   assert.equal(requests.length, 4);
   assert.deepEqual(attendees, ['1', '2', '2', '4']);
+});
+
+test('email uses the Foundation Day message with personalized details and attached PDF', () => {
+  const source = appsScript.match(/function sendTicketEmail[\s\S]*?\n}/)[0];
+  const messages = [];
+  const pdf = {};
+  const send = Function('getOrCreateTicketPdf_', 'MailApp', `return (${source})`)(
+    (name, count, id) => {
+      assert.equal(name, 'Test Guest');
+      assert.equal(count, '3');
+      assert.equal(id, 'TEST-ID');
+      return pdf;
+    },
+    { sendEmail: message => messages.push(message) }
+  );
+  send('Test Guest', 'guest@example.test', '2', 'TEST-ID');
+  assert.equal(messages.length, 1);
+  assert.equal(messages[0].to, 'guest@example.test');
+  assert.equal(messages[0].subject, 'Your Official Entry Pass — 12th Gravity Foundation Day');
+  assert.equal(messages[0].body, 'Hello Test Guest👋\n\n' +
+    'Thank you for confirming your RSVP for 12th Gravity Foundation Day! 🎉 ' +
+    'We’re delighted to have you join us for the celebration. ✨\n\n' +
+    '🎟️ Your personalised entry pass is attached. Please keep it handy for a smooth entry.\n\n' +
+    'Ticket ID: TEST-ID\n\n' +
+    '📍 Venue Location: https://maps.app.goo.gl/J7xcZGSBWMUaD1v86?g_st=ic\n\n' +
+    'We can’t wait to celebrate this special evening with you! 🌟');
+  assert.deepEqual(messages[0].attachments, [pdf]);
 });
 
 test('email and WhatsApp reuse one privately cached generated PDF', () => {

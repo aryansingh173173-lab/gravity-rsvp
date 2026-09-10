@@ -12,6 +12,7 @@
  *  5. Add EVOLUTION_BASE_URL, EVOLUTION_API_KEY and EVOLUTION_INSTANCE_NAME
  *     in Project Settings > Script properties.
  *  6. Run installSweepTrigger() once — the safety net that retries failures.
+ *     Run installWhatsAppRetryTrigger() once for the one-minute WhatsApp recovery worker.
  *  7. Deploy > New deployment > type "Web app".
  *       - Execute as: Me
  *       - Who has access: Anyone
@@ -28,9 +29,9 @@
 
 var SHEET_NAME = 'RSVPs';
 var SPREADSHEET_ID = '18tuY1IeFRz2XenryFE3kfXTiZxUbNa7Cs_4kExr9JU0';
-// Exact "Gravity rsvp invitation.png" artwork supplied for emailed passes.
+// Exact "LAST TEMPLATE.png" artwork supplied for emailed and WhatsApp passes.
 // Keep a version query so Apps Script never reuses an older cached background.
-var TEMPLATE_IMAGE_URL = 'https://gravity-rsvp.vercel.app/Gravity%20rsvp%20invitation.png?v=20260908-rsvp-invitation';
+var TEMPLATE_IMAGE_URL = 'https://gravity-rsvp.vercel.app/LAST%20TEMPLATE.png?v=20260910-foundation-day';
 
 // A blank Slides file whose page setup is 5.33 x 8 in (the artwork's 2:3 shape).
 // Slides.Presentations.create() ignores any pageSize you pass and the API cannot
@@ -266,6 +267,8 @@ function appendRsvp(fields, needsTicket, whatsapp) {
       new Date()
     ];
 
+    // Keep phone digits as text when a later worker reads the saved row.
+    sheet.getRange(row, WHATSAPP_NUMBER_COL).setNumberFormat('@');
     sheet.getRange(row, 1, 1, TOTAL_COLS).setValues([
       [new Date(), uniqueID].concat(fields)
         .concat([needsTicket ? 'Pending' : 'Not required'])
@@ -339,6 +342,17 @@ function installSweepTrigger() {
 function sweepPendingTickets() {
   processPendingTickets();
   processPendingWhatsApp();
+}
+
+/** Run once after pasting this version. Never schedules the attempt-reset helper. */
+function installWhatsAppRetryTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function (trigger) {
+    if (trigger.getHandlerFunction() === 'sweepPendingWhatsApp') {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  });
+  ScriptApp.newTrigger('sweepPendingWhatsApp').timeBased().everyMinutes(1).create();
+  Logger.log('WhatsApp recovery installed: every minute, at most 3 attempts per ticket.');
 }
 
 /** Treats explicit booleans and common form strings as consent. */
@@ -638,6 +652,12 @@ function sanitizeEvolutionError_(value, config) {
 
 /** Sends the existing personalised PDF Blob as a WhatsApp document. */
 function sendTicketWhatsApp(fullName, number, guestCount, uniqueID, config) {
+  // Sheets can return existing phone cells as numbers. Normalize before JSON
+  // serialization so every recipient is sent as a plain digit string.
+  number = normalizeWhatsAppNumber(number, getWhatsAppDefaultCountryCode_());
+  if (!number) {
+    throw evolutionError_('Invalid WhatsApp recipient number.', false, false);
+  }
   var additionalGuests = Math.max(0, parseInt(guestCount, 10) || 0);
   var attendeeCount = String(1 + additionalGuests);
   var pdfAttachment = getOrCreateTicketPdf_(fullName, attendeeCount, uniqueID);
@@ -646,23 +666,35 @@ function sendTicketWhatsApp(fullName, number, guestCount, uniqueID, config) {
     .replace(/^_+|_+$/g, '') || 'Guest';
   var fileName = 'Gravity_Pass_' + safeName + '_' + uniqueID + '.pdf';
   var mediaBlob = pdfAttachment.copyBlob().setName(fileName);
-  var caption = 'Hello ' + fullName +
-    ', thank you for confirming your RSVP for Gravity Annual Day 2026. ' +
-    'Your personalised entry pass is attached. Ticket ID: ' + uniqueID + '.';
+  var caption = 'Hello ' + fullName + '! 👋\n\n' +
+    'Thank you for confirming your RSVP for Gravity Annual Day 2026! 🎉 ' +
+    'We’re delighted to have you join us for the celebration. ✨\n\n' +
+    '🎟️ Your personalised entry pass is attached. Please keep it handy for a smooth entry.\n\n' +
+    'Ticket ID: ' + uniqueID + '\n\n' +
+    'We can’t wait to celebrate this special evening with you! 🌟';
   var url = config.baseUrl + '/message/sendMedia/' + encodeURIComponent(config.instanceName);
   var response;
+
+  // Identifies this sender in manual and trigger executions without logging
+  // phone numbers, API keys, or the invitation PDF.
+  Logger.log('WA_JSON_V3 | ticket=' + uniqueID +
+             ' | project=' + ScriptApp.getScriptId() +
+             ' | numberType=' + typeof number);
 
   try {
     response = UrlFetchApp.fetch(url, {
       method: 'post',
+      contentType: 'application/json',
       headers: { apikey: config.apiKey },
-      payload: {
-        number: number,
+      payload: JSON.stringify({
+        number: String(number),
         mediatype: 'document',
-        media: mediaBlob,
+        mimetype: 'application/pdf',
+        // JSON preserves phone digits and Evolution accepts base64 media.
+        media: Utilities.base64Encode(mediaBlob.getBytes()),
         caption: caption,
         fileName: fileName
-      },
+      }),
       muteHttpExceptions: true,
       followRedirects: true
     });
@@ -710,6 +742,24 @@ function updateWhatsAppState_(sheet, rowNum, status, messageId, attempts, lastEr
   SpreadsheetApp.flush();
 }
 
+/** Only recover the known malformed-recipient rejection, not every HTTP 400. */
+function isScientificPhoneFailure_(message) {
+  var text = String(message || '');
+  return /Evolution returned HTTP 400\b/.test(text) &&
+    /"exists"\s*:\s*false/.test(text) &&
+    /"number"\s*:\s*"\d+(?:\.\d+)?[eE]\+?\d+"/.test(text);
+}
+
+/** The attempt count is retained across manual, one-off and recurring runs. */
+function isWhatsAppWorkCandidate_(row) {
+  if (!isWhatsAppEligible(row) || row[WHATSAPP_MESSAGE_ID_COL - 1]) return false;
+  var attempts = parseInt(row[WHATSAPP_ATTEMPTS_COL - 1], 10) || 0;
+  if (attempts >= WHATSAPP_MAX_ATTEMPTS) return false;
+  var status = String(row[WHATSAPP_STATUS_COL - 1] || '');
+  return isWhatsAppOutstanding_(status) ||
+    (status === 'Failed' && isScientificPhoneFailure_(row[WHATSAPP_LAST_ERROR_COL - 1]));
+}
+
 /**
  * Processes WhatsApp separately from email. A successful email is never
  * repeated merely because Evolution is unavailable.
@@ -742,9 +792,7 @@ function processPendingWhatsApp() {
 
     var lastRow = sheet.getLastRow();
     var rows = sheet.getRange(2, 1, lastRow - 1, TOTAL_COLS).getValues();
-    var outstanding = rows.filter(function (row) {
-      return isWhatsAppOutstanding_(row[WHATSAPP_STATUS_COL - 1]);
-    });
+    var outstanding = rows.filter(isWhatsAppWorkCandidate_);
     if (!outstanding.length) return;
 
     var connectionState;
@@ -761,10 +809,13 @@ function processPendingWhatsApp() {
     }
 
     var processed = 0;
+    var startedAt = Date.now();
     for (var i = 0; i < rows.length; i++) {
-      var status = rows[i][WHATSAPP_STATUS_COL - 1];
-      if (!isWhatsAppOutstanding_(status)) continue;
-      if (processed >= config.batchSize) { leftover = true; break; }
+      if (!isWhatsAppWorkCandidate_(rows[i])) continue;
+      if (processed >= config.batchSize || Date.now() - startedAt >= MAX_RUN_MS) {
+        leftover = true;
+        break;
+      }
 
       var rowNum = i + 2;
       var uniqueID = rows[i][1];
@@ -798,7 +849,8 @@ function processPendingWhatsApp() {
         if (err && err.deliveryUnknown) {
           updateWhatsAppState_(sheet, rowNum, 'Unknown', '', attempts, message);
           unknown++;
-        } else if ((!err || err.retryable !== false) && attempts < WHATSAPP_MAX_ATTEMPTS) {
+        } else if ((!err || err.retryable !== false || isScientificPhoneFailure_(message)) &&
+                   attempts < WHATSAPP_MAX_ATTEMPTS) {
           updateWhatsAppState_(sheet, rowNum, 'Retry ' + attempts, '', attempts, message);
           retried++;
           leftover = true;
@@ -877,9 +929,10 @@ function buildTicketPdf(fullName, attendeeCount, uniqueID) {
     var ticketIdSize = fitSingleLineFontSize(uniqueID, 13, 8, ticketFieldWidth, 0.58);
 
     var guestNamePos = positionTextAboveLine(at(326, 682), guestNameSize, 2);
+    var attendeePos = positionTextAboveLine(at(326, 862), attendeeSize, 2);
     var ticketIdPos = positionTextAboveLine(at(448, 1002), ticketIdSize, 2);
     addTicketField(slide, fullName,      guestNamePos, guestNameSize, '#171717', pageW, guestFieldWidth);
-    addTicketField(slide, attendeeCount, at(326, 825), attendeeSize, '#171717', pageW, attendeeFieldWidth);
+    addTicketField(slide, attendeeCount, attendeePos, attendeeSize, '#171717', pageW, attendeeFieldWidth);
     addTicketField(slide, uniqueID,      ticketIdPos, ticketIdSize, '#9f1118', pageW, ticketFieldWidth);
     addWelcomeName(slide, fullName, at(449, 1137), 268 * scale, 64 * scale);
 
@@ -900,9 +953,15 @@ function buildTicketPdf(fullName, attendeeCount, uniqueID) {
  * the exact same PDF bytes. The saved file ID is an internal cache pointer;
  * neither the file nor its folder is made public.
  */
+function getTicketPdfCacheKey_(uniqueID) {
+  // Changing the artwork URL (including its version query) invalidates cached
+  // passes without deleting old Drive files or changing ticket IDs.
+  return GENERATED_PDF_PROPERTY_PREFIX + encodeURIComponent(TEMPLATE_IMAGE_URL) + '_' + uniqueID;
+}
+
 function getOrCreateTicketPdf_(fullName, attendeeCount, uniqueID) {
   var props = PropertiesService.getScriptProperties();
-  var propertyKey = GENERATED_PDF_PROPERTY_PREFIX + uniqueID;
+  var propertyKey = getTicketPdfCacheKey_(uniqueID);
   var existingId = String(props.getProperty(propertyKey) || '');
 
   if (existingId) {

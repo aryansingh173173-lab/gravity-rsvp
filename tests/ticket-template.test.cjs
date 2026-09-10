@@ -5,13 +5,13 @@ const { test } = require('node:test');
 
 const root = path.join(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'gravity-rsvp-appsscript.gs'), 'utf8');
-const artwork = fs.readFileSync(path.join(root, 'Gravity rsvp invitation.png'));
+const artwork = fs.readFileSync(path.join(root, 'LAST TEMPLATE.png'));
 
-test('emailed artwork is the supplied 1024 x 1536 Gravity RSVP invitation PNG', () => {
+test('emailed artwork is the supplied 1024 x 1536 LAST TEMPLATE PNG', () => {
   assert.equal(artwork.subarray(1, 4).toString(), 'PNG');
   assert.equal(artwork.readUInt32BE(16), 1024);
   assert.equal(artwork.readUInt32BE(20), 1536);
-  assert.match(source, /Gravity%20rsvp%20invitation\.png\?v=20260908-rsvp-invitation/);
+  assert.match(source, /LAST%20TEMPLATE\.png\?v=20260910-foundation-day/);
 });
 
 test('ticket generator fills only the three artwork fields', () => {
@@ -41,6 +41,7 @@ test('long names shrink while every dynamic value stays on a single artwork line
   assert.ok(longNameSize < shortNameSize);
   assert.ok(longNameSize >= 6.5);
   assert.match(source, /positionTextAboveLine\(at\(326, 682\), guestNameSize, 2\)/);
+  assert.match(source, /positionTextAboveLine\(at\(326, 862\), attendeeSize, 2\)/);
   assert.match(source, /positionTextAboveLine\(at\(448, 1002\), ticketIdSize, 2\)/);
   assert.match(source, /addTicketField\(slide, uniqueID,\s+ticketIdPos, ticketIdSize/);
   assert.match(source, /addWelcomeName\(slide, fullName, at\(449, 1137\), 268 \* scale, 64 \* scale\)/);

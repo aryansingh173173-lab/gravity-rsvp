@@ -3,26 +3,33 @@
 from pathlib import Path
 
 from reportlab.pdfgen import canvas
+from reportlab.pdfbase.pdfmetrics import stringWidth
 
 
 ROOT = Path(__file__).resolve().parents[1]
-ARTWORK = ROOT / "gravity-annual-day-pass-template.png"
-OUTPUT = ROOT / "output" / "pdf" / "gravity-pass-mock.pdf"
+ARTWORK = ROOT / "LAST TEMPLATE.png"
+OUTPUT = ROOT / "output" / "pdf" / "gravity-foundation-pass-preview.pdf"
 
 ARTWORK_WIDTH = 1024
-ARTWORK_HEIGHT = 1535
+ARTWORK_HEIGHT = 1536
 PAGE_WIDTH = 5.33 * 72
 PAGE_HEIGHT = 8 * 72
 
 
-def add_field(pdf, value, x_px, y_px, font_px, color, scale, offset_x, offset_y):
-    """Match the field positions and sizing used by Apps Script."""
+def add_field(pdf, value, x_px, line_y_px, size, width_px, color, scale, offset_x, offset_y, centered=False):
+    """Approximate Slides typography using the same artwork line anchors."""
     x = offset_x + x_px * scale
-    y_from_top = offset_y + y_px * scale
-    font_size = font_px * scale
+    font = "Helvetica-BoldOblique" if centered else "Helvetica-Bold"
+    width = width_px * scale
+    font_size = min(size, size * width * 0.90 / max(1, stringWidth(str(value), font, size)))
+    # Leave room for descenders above the artwork line.
+    baseline = PAGE_HEIGHT - offset_y - line_y_px * scale + 2 + font_size * 0.2
     pdf.setFillColor(color)
-    pdf.setFont("Helvetica-Bold", font_size)
-    pdf.drawString(x, PAGE_HEIGHT - y_from_top - font_size, str(value))
+    pdf.setFont(font, font_size)
+    if centered:
+        pdf.drawCentredString(x + width / 2, baseline, str(value))
+    else:
+        pdf.drawString(x, baseline, str(value))
 
 
 def main():
@@ -34,19 +41,14 @@ def main():
     offset_y = (PAGE_HEIGHT - draw_height) / 2
 
     pdf = canvas.Canvas(str(OUTPUT), pagesize=(PAGE_WIDTH, PAGE_HEIGHT))
-    pdf.drawImage(
-        str(ARTWORK),
-        offset_x,
-        offset_y,
-        width=draw_width,
-        height=draw_height,
-        preserveAspectRatio=True,
-        mask="auto",
-    )
-    add_field(pdf, "Aryan Singh", 330, 650, 26, "#171717", scale, offset_x, offset_y)
-    add_field(pdf, "3", 330, 836, 26, "#171717", scale, offset_x, offset_y)
-    add_field(pdf, "GRV-2026-MOCK", 466, 1028, 23, "#9f1118", scale, offset_x, offset_y)
-    pdf.showPage()
+    for name in ["Aryan Singh", "Dakshayani Venkataraman Subramaniam"]:
+        pdf.drawImage(str(ARTWORK), offset_x, offset_y,
+                      width=draw_width, height=draw_height, mask="auto")
+        add_field(pdf, name, 326, 682, 12, 518, "#171717", scale, offset_x, offset_y)
+        add_field(pdf, "4", 326, 862, 12, 518, "#171717", scale, offset_x, offset_y)
+        add_field(pdf, "GRV-2026-PREVIEW", 448, 1002, 13, 356, "#9f1118", scale, offset_x, offset_y)
+        add_field(pdf, name, 449, 1137, 11.5, 268, "#a71018", scale, offset_x, offset_y, True)
+        pdf.showPage()
     pdf.save()
     print(OUTPUT)
 

@@ -28,7 +28,7 @@
  */
 
 var SHEET_NAME = 'RSVPs';
-var SPREADSHEET_ID = '18tuY1IeFRz2XenryFE3kfXTiZxUbNa7Cs_4kExr9JU0';
+var SPREADSHEET_ID = '1M0GjRKU_9rNOMZqZnSqDeac7vyYbOmBxiYFRmZHGUI4';
 // Exact "LAST TEMPLATE.png" artwork supplied for emailed and WhatsApp passes.
 // Keep a version query so Apps Script never reuses an older cached background.
 var TEMPLATE_IMAGE_URL = 'https://gravity-rsvp.vercel.app/LAST%20TEMPLATE.png?v=20260910-foundation-day-v2';
@@ -36,7 +36,7 @@ var TEMPLATE_IMAGE_URL = 'https://gravity-rsvp.vercel.app/LAST%20TEMPLATE.png?v=
 // A blank Slides file whose page setup is 5.33 x 8 in (the artwork's 2:3 shape).
 // Slides.Presentations.create() ignores any pageSize you pass and the API cannot
 // resize a deck afterwards, so each pass is built by copying this one.
-var SLIDE_TEMPLATE_ID = '1W3KZYUnmOSLEY6_uLb1vZZ5Vq-W8qAEcTpgmUKAgiVM';
+var SLIDE_TEMPLATE_ID = '1HeoEKmXJ5xsTvUQNXWR8akHyGxISaCBnk7lGwVTwUNw';
 
 var STATUS_COL = 10;          // Existing email "Ticket Status" — retained for compatibility
 var WHATSAPP_CONSENT_COL = 11;

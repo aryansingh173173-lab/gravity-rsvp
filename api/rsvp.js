@@ -2,7 +2,7 @@
 // Script web app. Configure APPS_SCRIPT_URL as an environment variable in
 // the Vercel project settings (Settings > Environment Variables).
 
-const SPREADSHEET_ID = '18tuY1IeFRz2XenryFE3kfXTiZxUbNa7Cs_4kExr9JU0';
+const SPREADSHEET_ID = '1M0GjRKU_9rNOMZqZnSqDeac7vyYbOmBxiYFRmZHGUI4';
 const RATE_WINDOW_MS = 10 * 60 * 1000;
 const RATE_LIMIT = 30;
 const rateBuckets = globalThis.__gravityRsvpRateBuckets || new Map();

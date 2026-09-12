@@ -34,7 +34,7 @@ test('Vercel proxy validates then adds its server-only Apps Script secret', asyn
       text: async () => JSON.stringify({
         result: 'success',
         id: 'GRV-2026-TEST',
-        spreadsheetId: '18tuY1IeFRz2XenryFE3kfXTiZxUbNa7Cs_4kExr9JU0'
+        spreadsheetId: '1M0GjRKU_9rNOMZqZnSqDeac7vyYbOmBxiYFRmZHGUI4'
       })
     };
   };

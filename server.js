@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const PORT = process.env.PORT || 3000;
-const SPREADSHEET_ID = '18tuY1IeFRz2XenryFE3kfXTiZxUbNa7Cs_4kExr9JU0';
+const SPREADSHEET_ID = '1M0GjRKU_9rNOMZqZnSqDeac7vyYbOmBxiYFRmZHGUI4';
 const RATE_WINDOW_MS = 10 * 60 * 1000;
 const RATE_LIMIT = 30;
 const rateBuckets = new Map();

@@ -58,7 +58,9 @@ var MAX_ATTEMPTS = 5;     // how many separate runs a row gets before giving up
 var WHATSAPP_MAX_ATTEMPTS = 3;
 var DEFAULT_WHATSAPP_BATCH_SIZE = 10;
 var GENERATED_PDF_FOLDER_PROPERTY = 'GENERATED_TICKET_FOLDER_ID';
-var GENERATED_PDF_PROPERTY_PREFIX = 'GENERATED_TICKET_FILE_';
+// Rotate this namespace whenever RSVP rows are intentionally reset so reused
+// ticket IDs can never resolve to a previous guest's cached pass.
+var GENERATED_PDF_PROPERTY_PREFIX = 'GENERATED_TICKET_FILE_FRESH_20260917_';
 var DUPLICATE_REGISTRATION_MESSAGE = 'This person is already registered.';
 
 var BASE_HEADERS = [

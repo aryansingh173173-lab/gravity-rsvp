@@ -1102,7 +1102,9 @@
     .then(function(res) {
       return res.json().then(function(data) {
         if (!res.ok) {
-          throw new Error(data.message || data.error || ('Server returned ' + res.status));
+          var error = new Error(data.message || data.error || ('Server returned ' + res.status));
+          error.code = data.code || '';
+          throw error;
         }
         return data;
       });
@@ -1346,7 +1348,9 @@
         _website: document.getElementById('company-website').value
       });
     } catch (err) {
-      alert('We could not save your RSVP. Please try again.\n\n' + err.message);
+      alert(err.code === 'DUPLICATE_REGISTRATION'
+        ? 'This person is already registered.'
+        : 'We could not save your RSVP. Please try again.\n\n' + err.message);
       return;
     } finally {
       submitBtn.disabled = false;
@@ -1398,7 +1402,9 @@
         _website: document.getElementById('company-website').value
       });
     } catch (err) {
-      alert('We could not save your RSVP. Please try again.\n\n' + err.message);
+      alert(err.code === 'DUPLICATE_REGISTRATION'
+        ? 'This person is already registered.'
+        : 'We could not save your RSVP. Please try again.\n\n' + err.message);
       return;
     }
 

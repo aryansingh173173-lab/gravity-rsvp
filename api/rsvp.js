@@ -81,6 +81,10 @@ module.exports = async function handler(req, res) {
     }
 
     if (data.result !== 'success') {
+      if (data.code === 'DUPLICATE_REGISTRATION') {
+        res.status(409).json(data);
+        return;
+      }
       throw new Error(data.message || 'Apps Script did not save the RSVP.');
     }
     if (data.spreadsheetId !== SPREADSHEET_ID) {

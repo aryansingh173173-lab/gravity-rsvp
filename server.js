@@ -82,7 +82,9 @@ async function sendToAppsScript(payload) {
         throw new Error('Apps Script did not return JSON. Check that the web app is deployed with access set to Anyone.');
       }
       if (data.result !== 'success') {
-        throw new Error(data.message || 'Apps Script did not save the RSVP.');
+        const err = new Error(data.message || 'Apps Script did not save the RSVP.');
+        err.code = data.code;
+        throw err;
       }
       if (data.spreadsheetId !== SPREADSHEET_ID) {
         throw new Error('The Apps Script deployment is outdated or points to the wrong spreadsheet. Redeploy the latest gravity-rsvp-appsscript.gs version.');
@@ -195,8 +197,13 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify(result));
       } catch (err) {
         console.error("Error processing/forwarding RSVP:", err);
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ result: 'error', message: err.message }));
+        const duplicate = err.code === 'DUPLICATE_REGISTRATION';
+        res.writeHead(duplicate ? 409 : 500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          result: 'error',
+          code: duplicate ? 'DUPLICATE_REGISTRATION' : 'RSVP_ERROR',
+          message: err.message
+        }));
       }
     });
     return;

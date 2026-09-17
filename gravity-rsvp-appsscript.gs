@@ -59,6 +59,7 @@ var WHATSAPP_MAX_ATTEMPTS = 3;
 var DEFAULT_WHATSAPP_BATCH_SIZE = 10;
 var GENERATED_PDF_FOLDER_PROPERTY = 'GENERATED_TICKET_FOLDER_ID';
 var GENERATED_PDF_PROPERTY_PREFIX = 'GENERATED_TICKET_FILE_';
+var DUPLICATE_REGISTRATION_MESSAGE = 'This person is already registered.';
 
 var BASE_HEADERS = [
   'Timestamp', 'Unique ID', 'Full Name', 'Email Address',
@@ -212,8 +213,13 @@ function doPost(e) {
       .setMimeType(ContentService.MimeType.JSON);
 
   } catch (err) {
+    var message = err && err.message ? err.message : String(err);
     return ContentService
-      .createTextOutput(JSON.stringify({ result: 'error', message: err.toString() }))
+      .createTextOutput(JSON.stringify({
+        result: 'error',
+        code: message === DUPLICATE_REGISTRATION_MESSAGE ? 'DUPLICATE_REGISTRATION' : 'RSVP_ERROR',
+        message: message
+      }))
       .setMimeType(ContentService.MimeType.JSON);
   }
 }
@@ -255,6 +261,12 @@ function appendRsvp(fields, needsTicket, whatsapp) {
     var sheet = ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME);
     ensureSheetSchema_(sheet);
 
+    // Check under the append lock so two identical submissions arriving at
+    // the same time cannot both pass the check and create separate tickets.
+    if (hasDuplicateRegistration_(sheet, fields[1], fields[2], whatsapp && whatsapp.number)) {
+      throw new Error(DUPLICATE_REGISTRATION_MESSAGE);
+    }
+
     var row = sheet.getLastRow() + 1;
     var uniqueID = 'GRV-2026-' + (1000 + row);
     var whatsappValues = [
@@ -285,6 +297,26 @@ function appendRsvp(fields, needsTicket, whatsapp) {
   } finally {
     lock.releaseLock();
   }
+}
+
+/** A registration is a duplicate only when both email and WhatsApp match. */
+function hasDuplicateRegistration_(sheet, email, mobile, normalizedNumber) {
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return false;
+
+  var wantedEmail = String(email || '').trim().toLowerCase();
+  var wantedNumber = String(normalizedNumber || normalizeWhatsAppNumber(
+    mobile, getWhatsAppDefaultCountryCode_()
+  ) || '');
+  if (!wantedEmail || !wantedNumber) return false;
+
+  var rows = sheet.getRange(2, 1, lastRow - 1, TOTAL_COLS).getValues();
+  return rows.some(function (row) {
+    var existingEmail = String(row[3] || '').trim().toLowerCase();
+    var existingNumber = String(row[WHATSAPP_NUMBER_COL - 1] || '') ||
+      normalizeWhatsAppNumber(row[4], getWhatsAppDefaultCountryCode_());
+    return existingEmail === wantedEmail && String(existingNumber) === wantedNumber;
+  });
 }
 
 /**
@@ -450,7 +482,13 @@ function processPendingTickets() {
 
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(30000)) {
-    Logger.log('Another run holds the lock; leaving this one to it.');
+    // WhatsApp and email are deliberately queued as independent one-off
+    // triggers, but Apps Script can start both at nearly the same time. If
+    // WhatsApp is still building/uploading its PDF, it may hold the shared
+    // script lock longer than this wait. Do not silently strand the email row:
+    // replace the spent one-off trigger with a delayed retry.
+    Logger.log('Another run holds the lock; retrying email in 60 seconds.');
+    scheduleTicketRun(60000);
     return;
   }
 

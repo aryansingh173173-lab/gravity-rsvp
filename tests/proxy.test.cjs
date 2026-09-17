@@ -101,3 +101,43 @@ test('Vercel proxy blocks bot trap submissions before forwarding', async () => {
     else process.env.APPS_SCRIPT_URL = originalUrl;
   }
 });
+
+test('Vercel proxy returns a conflict for duplicate registrations', async () => {
+  const originalFetch = global.fetch;
+  const originalUrl = process.env.APPS_SCRIPT_URL;
+  process.env.APPS_SCRIPT_URL = 'https://script.google.com/macros/s/test/exec';
+  global.fetch = async () => ({
+    ok: true,
+    status: 200,
+    text: async () => JSON.stringify({
+      result: 'error',
+      code: 'DUPLICATE_REGISTRATION',
+      message: 'This person is already registered.'
+    })
+  });
+
+  try {
+    const req = {
+      method: 'POST',
+      headers: { 'x-forwarded-for': '192.0.2.12' },
+      socket: {},
+      body: {
+        fullName: 'Existing Guest',
+        email: 'guest@example.com',
+        mobile: '9876543210',
+        attending: 'Attending',
+        guestCount: '0',
+        _website: ''
+      }
+    };
+    const res = responseRecorder();
+    await handler(req, res);
+    assert.equal(res.statusCode, 409);
+    assert.equal(res.body.code, 'DUPLICATE_REGISTRATION');
+    assert.equal(res.body.message, 'This person is already registered.');
+  } finally {
+    global.fetch = originalFetch;
+    if (originalUrl === undefined) delete process.env.APPS_SCRIPT_URL;
+    else process.env.APPS_SCRIPT_URL = originalUrl;
+  }
+});

@@ -26,16 +26,18 @@ function setup() {
     }
     return elements.get(id);
   }
+  const alerts = [];
   const context = vm.createContext({
     document: { getElementById: element, querySelector: element },
     window: { innerWidth: 1024 },
+    alert: message => alerts.push(message),
     console,
   });
   vm.runInContext(script, context);
   let submitted;
   context.postToSheet = async payload => { submitted = payload; };
   context.launchConfetti = () => {};
-  return { context, element, payload: () => submitted };
+  return { context, element, payload: () => submitted, alerts };
 }
 
 test('fields are separated into four distinct steps with unique IDs', () => {
@@ -128,4 +130,22 @@ test('WhatsApp consent is explicit and phone numbers are normalized safely', asy
   c.radioValues.guest = 'no';
   await c.submitForm();
   assert.equal(payload().whatsappConsent, true);
+});
+
+test('duplicate registrations show the requested popup and remain on the form', async () => {
+  const { context: c, element: el, alerts } = setup();
+  c.postToSheet = async () => {
+    const error = new Error('This person is already registered.');
+    error.code = 'DUPLICATE_REGISTRATION';
+    throw error;
+  };
+  el('fullname').value = 'Existing Guest';
+  el('email').value = 'guest@example.com';
+  el('mobile').value = '+91 98765 43210';
+  c.radioValues.guest = 'no';
+
+  await c.submitForm();
+
+  assert.deepEqual(alerts, ['This person is already registered.']);
+  assert.notEqual(el('form-card').style.display, 'none');
 });

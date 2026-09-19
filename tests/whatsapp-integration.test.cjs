@@ -48,6 +48,52 @@ test('phone normalization uses international digits and defaults valid Indian mo
   assert.equal(normalize('not-a-number'), '');
 });
 
+test('duplicate protection rejects either an existing email or WhatsApp number', () => {
+  const normalizeSource = appsScript.match(/function normalizeWhatsAppNumber[\s\S]*?\n}/)[0];
+  const normalize = Function(`return (${normalizeSource})`)();
+  const duplicateSource = appsScript.match(/function hasDuplicateRegistration_[\s\S]*?\n}/)[0];
+  const rows = [[
+    new Date(), 'GRV-2026-1002', 'Existing Guest', 'guest@example.com',
+    '+91 98765 43210', 'Attending', '0', '', '', 'Sent',
+    'Yes', '919876543210', 'Sent', 'message-id', 1, '', new Date()
+  ]];
+  const sheet = {
+    getLastRow: () => 2,
+    getRange: () => ({ getValues: () => rows })
+  };
+  const isDuplicate = Function(
+    'normalizeWhatsAppNumber', 'getWhatsAppDefaultCountryCode_',
+    'WHATSAPP_NUMBER_COL', 'TOTAL_COLS',
+    `return (${duplicateSource})`
+  )(normalize, () => '91', 12, 17);
+
+  assert.equal(isDuplicate(sheet, 'GUEST@example.com', '9123456789', '919123456789'), true);
+  assert.equal(isDuplicate(sheet, 'other@example.com', '98765 43210', '919876543210'), true);
+  assert.equal(isDuplicate(sheet, 'other@example.com', '9123456789', '919123456789'), false);
+});
+
+test('ticket IDs use a persistent sequence instead of recyclable sheet row numbers', () => {
+  const ctx = recoveryContext();
+  const props = {};
+  Object.assign(ctx, {
+    LAST_TICKET_SEQUENCE_PROPERTY: 'LAST_TICKET_SEQUENCE',
+    TICKET_SEQUENCE_FLOOR: 2000,
+    PropertiesService: { getScriptProperties: () => ({
+      getProperty: key => props[key] || '',
+      setProperty(key, value) { props[key] = value; }
+    }) }
+  });
+  const emptySheet = { getLastRow: () => 1 };
+  assert.equal(ctx.allocateTicketId_(emptySheet), 'GRV-2026-2001');
+  assert.equal(ctx.allocateTicketId_(emptySheet), 'GRV-2026-2002');
+
+  const laterSheet = {
+    getLastRow: () => 3,
+    getRange: () => ({ getDisplayValues: () => [['GRV-2026-2050'], ['not-a-ticket']] })
+  };
+  assert.equal(ctx.allocateTicketId_(laterSheet), 'GRV-2026-2051');
+});
+
 test('email and WhatsApp have independent queues and status fields', () => {
   assert.match(appsScript, /var TICKET_HANDLER = 'processPendingTickets'/);
   assert.match(appsScript, /var WHATSAPP_HANDLER = 'processPendingWhatsApp'/);
@@ -127,6 +173,13 @@ test('email uses the Foundation Day message with personalized details and attach
     '📍 Venue Location: https://maps.app.goo.gl/J7xcZGSBWMUaD1v86?g_st=ic\n\n' +
     'We can’t wait to celebrate this special evening with you! 🌟');
   assert.deepEqual(messages[0].attachments, [pdf]);
+});
+
+test('operator email diagnostic targets the Apps Script owner without creating an RSVP row', () => {
+  const source = appsScript.match(/function testTicketEmail[\s\S]*?\n}/)[0];
+  assert.match(source, /Session\.getEffectiveUser\(\)\.getEmail\(\)/);
+  assert.match(source, /sendTicketEmail\('Gravity Test Guest', email, '0', testId, ''\)/);
+  assert.doesNotMatch(source, /appendRsvp|scheduleTicketRun|scheduleWhatsAppRun/);
 });
 
 test('email and WhatsApp reuse one privately cached generated PDF', () => {
@@ -300,6 +353,11 @@ test('PDF cache skips legacy tickets and reuses only PDFs for the current artwor
   let builds = 0;
   const blob = { setName() { return this; } };
   Object.assign(ctx, {
+    Utilities: {
+      DigestAlgorithm: { SHA_256: 'sha256' }, Charset: { UTF_8: 'utf8' },
+      computeDigest: (algorithm, value) => [...Buffer.from(value)],
+      base64EncodeWebSafe: bytes => Buffer.from(bytes).toString('base64url')
+    },
     PropertiesService: { getScriptProperties: () => ({
       getProperty: key => props[key] || '', setProperty(key, value) { props[key] = value; },
       deleteProperty(key) { delete props[key]; }
@@ -318,7 +376,10 @@ test('PDF cache skips legacy tickets and reuses only PDFs for the current artwor
   assert.equal(builds, 1);
   assert.deepEqual(reads, ['new-pdf-id']);
   assert.equal(props.GENERATED_TICKET_FILE_TEST, 'old-pdf-id');
+  ctx.getOrCreateTicketPdf_('Different Guest', '2', 'TEST');
+  ctx.getOrCreateTicketPdf_('Test Guest', '3', 'TEST');
+  assert.equal(builds, 3, 'name or attendee changes must bypass the previous guest cache');
   ctx.TEMPLATE_IMAGE_URL += '&revision=next';
   ctx.getOrCreateTicketPdf_('Test Guest', '2', 'TEST');
-  assert.equal(builds, 2);
+  assert.equal(builds, 4);
 });

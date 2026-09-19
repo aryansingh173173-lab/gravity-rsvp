@@ -60,7 +60,11 @@ var DEFAULT_WHATSAPP_BATCH_SIZE = 10;
 var GENERATED_PDF_FOLDER_PROPERTY = 'GENERATED_TICKET_FOLDER_ID';
 // Rotate this namespace whenever RSVP rows are intentionally reset so reused
 // ticket IDs can never resolve to a previous guest's cached pass.
-var GENERATED_PDF_PROPERTY_PREFIX = 'GENERATED_TICKET_FILE_FRESH_20260917_';
+var GENERATED_PDF_PROPERTY_PREFIX = 'GENERATED_TICKET_FILE_FRESH_20260919_';
+var LAST_TICKET_SEQUENCE_PROPERTY = 'LAST_TICKET_SEQUENCE';
+// The production launch starts in a new number range. Unlike row-based IDs,
+// this counter survives clearing the spreadsheet, so IDs are never recycled.
+var TICKET_SEQUENCE_FLOOR = 2000;
 var DUPLICATE_REGISTRATION_MESSAGE = 'This person is already registered.';
 
 var BASE_HEADERS = [
@@ -270,7 +274,7 @@ function appendRsvp(fields, needsTicket, whatsapp) {
     }
 
     var row = sheet.getLastRow() + 1;
-    var uniqueID = 'GRV-2026-' + (1000 + row);
+    var uniqueID = allocateTicketId_(sheet);
     var whatsappValues = [
       whatsapp && whatsapp.consent ? 'Yes' : 'No',
       whatsapp ? whatsapp.number : '',
@@ -301,7 +305,31 @@ function appendRsvp(fields, needsTicket, whatsapp) {
   }
 }
 
-/** A registration is a duplicate only when both email and WhatsApp match. */
+/**
+ * Allocates a monotonic ticket ID independently of the sheet row number.
+ * Script Properties survive data-row cleanup, preventing a cleared sheet from
+ * recycling an older guest's ticket number.
+ */
+function allocateTicketId_(sheet) {
+  var props = PropertiesService.getScriptProperties();
+  var stored = parseInt(props.getProperty(LAST_TICKET_SEQUENCE_PROPERTY), 10) || 0;
+  var sheetMax = 0;
+  var lastRow = sheet.getLastRow();
+
+  if (lastRow >= 2) {
+    var ids = sheet.getRange(2, 2, lastRow - 1, 1).getDisplayValues();
+    for (var i = 0; i < ids.length; i++) {
+      var match = String(ids[i][0] || '').match(/^GRV-2026-(\d+)$/);
+      if (match) sheetMax = Math.max(sheetMax, parseInt(match[1], 10) || 0);
+    }
+  }
+
+  var next = Math.max(TICKET_SEQUENCE_FLOOR, stored, sheetMax) + 1;
+  props.setProperty(LAST_TICKET_SEQUENCE_PROPERTY, String(next));
+  return 'GRV-2026-' + next;
+}
+
+/** A registration is a duplicate when either email or WhatsApp already exists. */
 function hasDuplicateRegistration_(sheet, email, mobile, normalizedNumber) {
   var lastRow = sheet.getLastRow();
   if (lastRow < 2) return false;
@@ -310,14 +338,16 @@ function hasDuplicateRegistration_(sheet, email, mobile, normalizedNumber) {
   var wantedNumber = String(normalizedNumber || normalizeWhatsAppNumber(
     mobile, getWhatsAppDefaultCountryCode_()
   ) || '');
-  if (!wantedEmail || !wantedNumber) return false;
+  if (!wantedEmail && !wantedNumber) return false;
 
   var rows = sheet.getRange(2, 1, lastRow - 1, TOTAL_COLS).getValues();
   return rows.some(function (row) {
     var existingEmail = String(row[3] || '').trim().toLowerCase();
     var existingNumber = String(row[WHATSAPP_NUMBER_COL - 1] || '') ||
       normalizeWhatsAppNumber(row[4], getWhatsAppDefaultCountryCode_());
-    return existingEmail === wantedEmail && String(existingNumber) === wantedNumber;
+    var emailMatches = !!wantedEmail && existingEmail === wantedEmail;
+    var numberMatches = !!wantedNumber && String(existingNumber) === wantedNumber;
+    return emailMatches || numberMatches;
   });
 }
 
@@ -994,15 +1024,29 @@ function buildTicketPdf(fullName, attendeeCount, uniqueID) {
  * the exact same PDF bytes. The saved file ID is an internal cache pointer;
  * neither the file nor its folder is made public.
  */
-function getTicketPdfCacheKey_(uniqueID) {
+function getTicketPdfCacheKey_(uniqueID, fullName, attendeeCount) {
   // Changing the artwork URL (including its version query) invalidates cached
-  // passes without deleting old Drive files or changing ticket IDs.
-  return GENERATED_PDF_PROPERTY_PREFIX + encodeURIComponent(TEMPLATE_IMAGE_URL) + '_' + uniqueID;
+  // passes without deleting old Drive files or changing ticket IDs. Guest
+  // identity is also included, so even a mistakenly reused ticket ID can never
+  // return another person's personalised PDF.
+  var identity = [
+    String(fullName || '').trim().toLowerCase(),
+    String(attendeeCount || ''),
+    String(uniqueID || '')
+  ].join('|');
+  var digest = Utilities.computeDigest(
+    Utilities.DigestAlgorithm.SHA_256,
+    identity,
+    Utilities.Charset.UTF_8
+  );
+  var fingerprint = Utilities.base64EncodeWebSafe(digest).replace(/=+$/, '').slice(0, 24);
+  return GENERATED_PDF_PROPERTY_PREFIX + encodeURIComponent(TEMPLATE_IMAGE_URL) + '_' +
+    uniqueID + '_' + fingerprint;
 }
 
 function getOrCreateTicketPdf_(fullName, attendeeCount, uniqueID) {
   var props = PropertiesService.getScriptProperties();
-  var propertyKey = getTicketPdfCacheKey_(uniqueID);
+  var propertyKey = getTicketPdfCacheKey_(uniqueID, fullName, attendeeCount);
   var existingId = String(props.getProperty(propertyKey) || '');
 
   if (existingId) {
@@ -1213,6 +1257,17 @@ function whatsappStatusReport() {
                row[WHATSAPP_STATUS_COL - 1] + ' | attempts ' +
                (row[WHATSAPP_ATTEMPTS_COL - 1] || 0));
   });
+}
+
+/** Sends a PDF test to the Apps Script owner's Gmail without creating an RSVP row. */
+function testTicketEmail() {
+  var email = String(Session.getEffectiveUser().getEmail() || '').trim();
+  if (!email) throw new Error('Could not determine the Apps Script owner email address.');
+  var testId = 'GRV-2026-EMAIL-TEST-' +
+    Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'HHmmss');
+  sendTicketEmail('Gravity Test Guest', email, '0', testId, '');
+  Logger.log('Email test accepted for the Apps Script owner mailbox. Ticket ID: ' + testId);
+  return testId;
 }
 
 /** Manual live test. Set WHATSAPP_TEST_NUMBER in Script Properties first. */

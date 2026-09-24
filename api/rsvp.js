@@ -24,7 +24,6 @@ function isRateLimited(req) {
 
 function validatePayload(payload) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return 'Invalid request body.';
-  if (String(payload._website || '').trim()) return 'Invalid request body.';
   if (!String(payload.fullName || '').trim() || String(payload.fullName).length > 120) return 'Invalid full name.';
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(payload.email || '').trim())) return 'Invalid email address.';
   if (!String(payload.mobile || '').trim() || String(payload.mobile).length > 30) return 'Invalid mobile number.';
@@ -59,6 +58,8 @@ module.exports = async function handler(req, res) {
       res.status(400).json({ result: 'error', message: validationError });
       return;
     }
+    // Older cached forms may submit this field after browser autofill populates it.
+    delete payload._website;
     if (process.env.APPS_SCRIPT_SHARED_SECRET) {
       payload._proxySecret = process.env.APPS_SCRIPT_SHARED_SECRET;
     }
